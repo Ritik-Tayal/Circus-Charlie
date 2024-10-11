@@ -12,7 +12,7 @@ let gf=0;
 let stagnant=5;
 let walkId;
 
-function animate(){
+function rightWalk(){
     c.clearRect(0,0,canvas_width,canvas_height);
     c.drawImage(player_image,163+i*x,0,20,30,50,50,100,100);
     if(gf%stagnant==0){
@@ -24,11 +24,11 @@ function animate(){
         }
     }
     gf++;
-    walkId=requestAnimationFrame(animate);
+    walkId=requestAnimationFrame(rightWalk);
     cancelAnimationFrame();
 };
 
-function animate3(){
+function leftWalk(){
     c.clearRect(0,0,canvas_width,canvas_height);
     c.drawImage(player_image,135-i*x,0,20,30,50,50,100,100);
     if(gf%stagnant==0){
@@ -40,12 +40,12 @@ function animate3(){
         }
     }
     gf++;
-    requestAnimationFrame(animate3);
+    requestAnimationFrame(leftWalk);
 
 };
 
 
-function animate2(){
+function rightStop(){
     c.clearRect(0,0,canvas_width,canvas_height);
     c.drawImage(player_image,163+0*x,0,20,30,50,50,100,100);
     // if(gf%stagnant==0){
@@ -57,10 +57,10 @@ function animate2(){
     //     }
     // }
     // gf++;
-    requestAnimationFrame(animate2);
+    requestAnimationFrame(rightStop);
 };
 
-function animate4(){
+function leftStop(){
     c.clearRect(0,0,canvas_width,canvas_height);
     c.drawImage(player_image,135+0*x,0,20,30,50,50,100,100);
     // if(gf%stagnant==0){
@@ -72,26 +72,26 @@ function animate4(){
     //     }
     // }
     // gf++;
-    requestAnimationFrame(animate4);
+    requestAnimationFrame(leftStop);
 };
 
 document.addEventListener("keydown",function (e){
     if(e.key=="ArrowRight"){
-        animate();
+        rightWalk();
 
     }
     if(e.key=="ArrowLeft"){
-        animate3();
+        leftWalk();
     }
 })
 
 document.addEventListener("keyup", function(e){
     if(e.key=="ArrowRight"){
-        animate2();
+        rightStop();
 
     }
     if(e.key=="ArrowLeft"){
-        animate4();
+        leftStop();
     }    
 
 })
