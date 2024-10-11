@@ -13,10 +13,10 @@ let obstacleInterval;
 let bgmoveX = 0;
 
 const gravity = 1;
-const jumpPower = -20;
+const jumpPower = -17;
 let obsspeed = 4;
 let obstacleCount = 0;
-const maxDistance = 5000;
+const maxDistance = 20000;
 let totalDistance = 0;
 
 let isMovingLeft = false;
@@ -137,7 +137,6 @@ function update(deltaTime) {
         // Check if the character has covered the maximum distance
         if (totalDistance >= maxDistance) {
             gameOver = true;
-            ctx.fillText('You Win!', canvas.width / 2 - 50, canvas.height / 2 + 80);
         }
     }
 }
@@ -153,14 +152,15 @@ function gameLoop(timestamp) {
     if (gameOver) {
         ctx.fillStyle = 'black';
         ctx.font = '30px Arial';
-        ctx.fillText('Game Over', canvas.width / 2 - 70, canvas.height / 2);
-        ctx.fillText('Score: ' + score, canvas.width / 2 - 50, canvas.height / 2 + 40);
-        ctx.fillText('Press R to Restart', canvas.width / 2 - 90, canvas.height / 2 + 80);
-        // Check if the player won
-        if (totalDistance >= maxDistance) {
-            ctx.fillStyle = 'black';
-            ctx.fillText('You Win!', canvas.width / 2 - 50, canvas.height / 2 + 120);
+        if(totalDistance >= maxDistance)
+        {
+            ctx.fillText('You Win!', canvas.width/2 - 70, canvas.height/2 - 11);
         }
+        else{
+            ctx.fillText('Game Over', canvas.width/2 - 70, canvas.height/2 - 11);
+        }
+        ctx.fillText('Score: ' + score, canvas.width/2 - 68, canvas.height/2 + 29);
+        ctx.fillText('Press R to Restart', canvas.width/2 - 110, canvas.height/2 + 68);
         return;
     }
 
