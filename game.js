@@ -10,27 +10,35 @@ let score = 0;
 let gameOver = false;
 let gameStarted = false; 
 let obstacleInterval;
-let bgmove = 0;
+let bgmoveX = 0;
 
 const gravity = 1;
-const jumpPower = -17;
-const obsspeed = 10;
+const jumpPower = -20;
+let obsspeed = 4;
 let obstacleCount = 0;
-const obswin = 20;
+const maxDistance = 5000;
+let totalDistance = 0;
 
-// Load the initial screen image
+let isMovingLeft = false;
+let isMovingRight = false;
+const moveSpeed = 5;
+let lastTime = 0; // TRACKING TIME
+let speedBoost = false;
+let speedReduction = false;
+
+// HOMESCREEN
 const initialImage = new Image();
 initialImage.src = 'resources/logocc.png';
 
-// Load background image
+//BACKGROUND
 const backgroundImage = new Image();
 backgroundImage.src = 'resources/backgroundimage.gif';
 
-// Load player image
+//CHARLIE
 const playerImage = new Image();
 playerImage.src = 'resources/charlieclown.gif';
 
-// Load obstacle image
+// OBSTACLE1
 const obstacleImage = new Image();
 obstacleImage.src = 'resources/ringOfFire.gif';
 
@@ -38,8 +46,7 @@ obstacleImage.src = 'resources/ringOfFire.gif';
 function createObstacle() {
     obstacleCount++; 
     let height = 50; 
-    let width = 50; 
-
+    let width = 50;
 
     const obstacle = { x: canvas.width, y: 420 - height, width: width, height: height };
     obstacles.push(obstacle);
@@ -47,17 +54,16 @@ function createObstacle() {
 
 // DRAW BACKGROUND
 function drawBackground() {
-    ctx.drawImage(backgroundImage, bgmove, 0, canvas.width, canvas.height);
-    ctx.drawImage(backgroundImage, bgmove + canvas.width, 0, canvas.width, canvas.height);
+    ctx.drawImage(backgroundImage, bgmoveX, 0, canvas.width, canvas.height);
+    ctx.drawImage(backgroundImage, bgmoveX + canvas.width, 0, canvas.width, canvas.height);
 }
-
 
 // DRAW PLAYER
 function drawCharacter() {
     ctx.drawImage(playerImage, character.x, character.y, character.width, character.height);
 }
 
-//DRAW OBSTACLE
+// DRAW OBSTACLE
 function drawObstacles() {
     for (let obstacle of obstacles) {
         ctx.drawImage(obstacleImage, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
@@ -65,7 +71,7 @@ function drawObstacles() {
 }
 
 // UPDATE LOGIC FOR GAME
-function update() {
+function update(deltaTime) {
     if (character.jumping) {
         character.dy += gravity;
         character.y += character.dy;
@@ -77,13 +83,35 @@ function update() {
         }
     }
 
-    // MOVING OBSTACLES WITH UNIFORM SPEED
-    for (let obstacle of obstacles) {
-        obstacle.x -= obsspeed;
+    //SPEED CHANGE
+    if (isMovingRight && !speedBoost) {
+        obsspeed += moveSpeed;
+        speedBoost = true;
+    } else if (isMovingLeft && !speedReduction) {
+        obsspeed = Math.max(moveSpeed - obsspeed, 2);
+        speedReduction = true;
     }
 
-    // UPDATE BACKGROUND
-    bgmove -= obsspeed;
+    // MOVING OBSTACLES WITH UNIFORM SPEED
+    for (let obstacle of obstacles) {
+        obstacle.x -= obsspeed * (deltaTime / 16);
+    }
+
+    //BACKGROUND MOVEMENT
+    if (isMovingLeft) {
+        bgmoveX += moveSpeed * (deltaTime / 16);
+    }
+    if (isMovingRight) {
+        bgmoveX -= moveSpeed * (deltaTime / 16);   
+    }
+
+    //RESET BACKGROUND
+    if (bgmoveX >= 0) {
+        bgmoveX = 0;
+    }
+    if (bgmoveX <= -canvas.width) {
+        bgmoveX = 0;
+    }
 
     // END GAME FOR COLLISION
     for (let obstacle of obstacles) {
@@ -103,23 +131,23 @@ function update() {
     // SCORE COUNTING
     if (!gameOver) {
         score++;
+        // Track the total distance covered by the character
+        totalDistance += obsspeed * (deltaTime / 16);
 
-        // END GAME AFTER CROSSING 20 OBSTACLES
-        if (obstacleCount >= obswin) {
+        // Check if the character has covered the maximum distance
+        if (totalDistance >= maxDistance) {
             gameOver = true;
+            ctx.fillText('You Win!', canvas.width / 2 - 50, canvas.height / 2 + 80);
         }
-    }
-
-    // RESET BACKGROUND FOR LOOP MOTION
-    if (bgmove <= -canvas.width) {
-        bgmove = 0;
     }
 }
 
 // GAME LOOP
-function gameLoop() {
+function gameLoop(timestamp) {
+    const deltaTime = timestamp - lastTime;
+    lastTime = timestamp;
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
     drawBackground();
 
     if (gameOver) {
@@ -128,12 +156,17 @@ function gameLoop() {
         ctx.fillText('Game Over', canvas.width / 2 - 70, canvas.height / 2);
         ctx.fillText('Score: ' + score, canvas.width / 2 - 50, canvas.height / 2 + 40);
         ctx.fillText('Press R to Restart', canvas.width / 2 - 90, canvas.height / 2 + 80);
+        // Check if the player won
+        if (totalDistance >= maxDistance) {
+            ctx.fillStyle = 'black';
+            ctx.fillText('You Win!', canvas.width / 2 - 50, canvas.height / 2 + 120);
+        }
         return;
     }
 
     drawCharacter();
     drawObstacles();
-    update();
+    update(deltaTime);
     ctx.fillText('Score: ' + score, 20, 30); // LIVE SCORE
 
     requestAnimationFrame(gameLoop);
@@ -147,29 +180,50 @@ function jump() {
     }
 }
 
+//FIRST VISIBLE SCREEN
 window.onload = function() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-    ctx.drawImage(initialImage, 0, 0, canvas.width, canvas.height); // Draw the initial image
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(initialImage, 0, 0, canvas.width, canvas.height);
 };
-
 
 document.addEventListener('keydown', (event) => {
     if (event.code === 'Space') {
-        jump();// SPACEBAR PRESS FOR JUMP
+        jump(); // SPACEBAR PRESS FOR JUMP
     }
     if (event.code === 'KeyR' && gameOver) {
-        resetGame(); // Reset game on 'R' key
+        resetGame(); //RESET ON R
     }
     if (event.code === 'KeyP' && !gameStarted) {
-        startGame(); // Start the game on 'P' key
+        startGame(); //PLAY ON P
+    }
+    if (event.code === 'ArrowLeft') {
+        isMovingLeft = true;
+    }
+    if (event.code === 'ArrowRight') {
+        isMovingRight = true;
+    }
+});
+
+//REVERTING KEYDOWN EVENTS
+document.addEventListener('keyup', (event) => {
+    if (event.code === 'ArrowLeft') {
+        isMovingLeft = false;
+        speedReduction = false;
+        obsspeed = 4;
+    }
+    if (event.code === 'ArrowRight') {
+        isMovingRight = false;
+        speedBoost = false;
+        obsspeed = 4;
     }
 });
 
 // START GAME
 function startGame() {
     gameStarted = true;
-    gameLoop();
-    obstacleInterval = setInterval(createObstacle, 1000);
+    lastTime = performance.now();
+    gameLoop(lastTime);
+    obstacleInterval = setInterval(createObstacle, 1500);
 }
 
 // RESET GAME
@@ -180,7 +234,12 @@ function resetGame() {
     score = 0;
     gameOver = false;
     obstacleCount = 0;
-    bgmove = 0;
+    bgmoveX = 0;
+    obsspeed = 4;
+    totalDistance = 0;
+    speedBoost = false;
+    speedReduction = false;
     gameStarted = false; 
+    lastTime = 0;
     startGame();
 }
