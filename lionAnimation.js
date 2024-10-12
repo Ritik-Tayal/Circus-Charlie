@@ -18,7 +18,7 @@ let runLeftId = null;
 function lionWalk() {
     c.clearRect(0, 0, canvas_width, canvas_height);
     c.drawImage(lion_image, 163 , 0, 20, 30, 70, 60, 60, 60);
-    c.drawImage(lion_image, 160 + lioni * 38, 84, 36, 20, 50, 100, 140, 100);
+    c.drawImage(lion_image, 160 + lioni * 38, 84, 34, 20, 50, 100, 140, 100);
     if (gf % stagnant === 0) {
         lioni = (lioni < 2) ? lioni + 1 : 0;
     }
@@ -40,7 +40,7 @@ function runLeft() {
 function lionRightStop() {
     c.clearRect(0, 0, canvas_width, canvas_height);
     c.drawImage(lion_image, 163 , 0, 20, 30, 70, 60, 60, 60);
-    c.drawImage(lion_image, 160 + 2 * 38, 84, 36, 20, 50, 100, 120, 100);
+    c.drawImage(lion_image, 160 + 2 * 38, 84, 34, 20, 50, 100, 120, 100);
     // if (gf % stagnant === 0) {
     //     i = (i < 3) ? i + 1 : 0;
     // }
