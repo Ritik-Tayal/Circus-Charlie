@@ -6,18 +6,21 @@ canvas.height = window.innerHeight;
 
 let character = { x: 300, y: 400, width: 60, height: 50, dy: 0, jumping: false };
 let obstacles = [];
-let score = 0;
 let gameOver = false;
-let gameStarted = false; 
+let gameStarted = false;
 let obstacleInterval;
 let bgmoveX = 0;
 
 const gravity = 1;
 const jumpPower = -17;
 let obsspeed = 4;
-let obstacleCount = 0;
 const maxDistance = 20000;
 let totalDistance = 0;
+let lives = 3;
+let startpoint = 0;
+let checkpoint1 = 5000;
+let checkpoint2 = 15000;
+let time = 3600;
 
 let isMovingLeft = false;
 let isMovingRight = false;
@@ -42,10 +45,13 @@ playerImage.src = 'resources/charlieclown.gif';
 const obstacleImage = new Image();
 obstacleImage.src = 'resources/ringOfFire.gif';
 
+// CHECKPOINT MESSAGE
+let checkpointMessage = '';  // Store the checkpoint message
+let checkpointTimer = 0;     // Timer to display the checkpoint message
+
 // OBSTACLE CREATION
 function createObstacle() {
-    obstacleCount++; 
-    let height = 50; 
+    let height = 50;
     let width = 50;
 
     const obstacle = { x: canvas.width, y: 420 - height, width: width, height: height };
@@ -83,7 +89,7 @@ function update(deltaTime) {
         }
     }
 
-    //SPEED CHANGE
+    // SPEED CHANGE
     if (isMovingRight && !speedBoost) {
         obsspeed += moveSpeed;
         speedBoost = true;
@@ -97,15 +103,15 @@ function update(deltaTime) {
         obstacle.x -= obsspeed * (deltaTime / 16);
     }
 
-    //BACKGROUND MOVEMENT
+    // BACKGROUND MOVEMENT
     if (isMovingLeft) {
         bgmoveX += moveSpeed * (deltaTime / 16);
     }
     if (isMovingRight) {
-        bgmoveX -= moveSpeed * (deltaTime / 16);   
+        bgmoveX -= moveSpeed * (deltaTime / 16);
     }
 
-    //RESET BACKGROUND
+    // RESET BACKGROUND
     if (bgmoveX >= 0) {
         bgmoveX = 0;
     }
@@ -121,20 +127,53 @@ function update(deltaTime) {
             character.y < obstacle.y + obstacle.height &&
             character.y + character.height > obstacle.y
         ) {
-            gameOver = true;
+            if (lives > 1) {
+                lives--;
+                if (totalDistance >= checkpoint2) {
+                    cp(checkpoint2);
+                }
+                else if (totalDistance >= checkpoint1) {
+                    cp(checkpoint1);
+                }
+                else {
+                    cp(startpoint);
+                }
+            } else {
+                gameOver = true;
+            }
         }
     }
 
     // REMOVE OFFSCREEN OBSTACLES
     obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
 
-    // SCORE COUNTING
+    //DISTANCE COUNTING
     if (!gameOver) {
-        score++;
-        // Track the total distance covered by the character
-        totalDistance += obsspeed * (deltaTime / 16);
+        time--;
+        if(time <= 0)
+        {
+            gameOver = true;
+        }
+        if (isMovingRight) {
+            totalDistance += moveSpeed;
+        }
+        if (isMovingLeft) {
+            if(totalDistance >= 5){
+            totalDistance -= moveSpeed;
+        }
+        else{
+            totalDistance = 0;
+        }
+    }
 
-        // Check if the character has covered the maximum distance
+        //CHECKPOINT MESSAGE
+        if (totalDistance >= checkpoint1 && totalDistance < checkpoint1 + obsspeed) {
+            triggerCheckpoint();
+        }
+        if (totalDistance >= checkpoint2 && totalDistance < checkpoint2 + obsspeed) {
+            triggerCheckpoint();
+        }
+
         if (totalDistance >= maxDistance) {
             gameOver = true;
         }
@@ -151,23 +190,35 @@ function gameLoop(timestamp) {
 
     if (gameOver) {
         ctx.fillStyle = 'black';
-        ctx.font = '30px Arial';
-        if(totalDistance >= maxDistance)
-        {
-            ctx.fillText('You Win!', canvas.width/2 - 70, canvas.height/2 - 11);
+        ctx.font = '30px myFont';
+        if (totalDistance >= maxDistance) {
+            ctx.fillText('You Win!', canvas.width / 2 - 110, canvas.height / 2 - 11);
+        } else {
+            ctx.fillText('Game Over', canvas.width / 2 - 113, canvas.height / 2 - 11);
         }
-        else{
-            ctx.fillText('Game Over', canvas.width/2 - 70, canvas.height/2 - 11);
-        }
-        ctx.fillText('Score: ' + score, canvas.width/2 - 68, canvas.height/2 + 29);
-        ctx.fillText('Press R to Restart', canvas.width/2 - 110, canvas.height/2 + 68);
+        ctx.fillText('Press R to Restart', canvas.width / 2 - 235, canvas.height / 2 + 68);
         return;
     }
 
     drawCharacter();
     drawObstacles();
     update(deltaTime);
-    ctx.fillText('Score: ' + score, 20, 30); // LIVE SCORE
+
+    ctx.fillStyle = 'black';
+    ctx.font = '25px myFont';
+    ctx.fillText('TD: ' + totalDistance, 40, 670);
+    ctx.fillText('Lives: ' + lives, 40, 700);
+    ctx.fillText('Time left: ' + time, 40, 640);
+
+    // DISPLAY 'CHECKPOINT' FOR 3S
+    if (checkpointMessage && checkpointTimer > 0) {
+        ctx.fillStyle = 'black';
+        ctx.font = '40px myFont';
+        ctx.fillText(checkpointMessage, canvas.width / 2 - 400, canvas.height / 2);
+        checkpointTimer -= deltaTime;
+    } else {
+        checkpointMessage = '';
+    }
 
     requestAnimationFrame(gameLoop);
 }
@@ -180,7 +231,7 @@ function jump() {
     }
 }
 
-//FIRST VISIBLE SCREEN
+// FIRST VISIBLE SCREEN
 window.onload = function() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(initialImage, 0, 0, canvas.width, canvas.height);
@@ -191,10 +242,10 @@ document.addEventListener('keydown', (event) => {
         jump(); // SPACEBAR PRESS FOR JUMP
     }
     if (event.code === 'KeyR' && gameOver) {
-        resetGame(); //RESET ON R
+        resetGame(); // RESET ON R
     }
     if (event.code === 'KeyP' && !gameStarted) {
-        startGame(); //PLAY ON P
+        startGame(); // PLAY ON P
     }
     if (event.code === 'ArrowLeft') {
         isMovingLeft = true;
@@ -204,7 +255,7 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-//REVERTING KEYDOWN EVENTS
+// REVERTING KEYDOWN EVENTS
 document.addEventListener('keyup', (event) => {
     if (event.code === 'ArrowLeft') {
         isMovingLeft = false;
@@ -231,15 +282,35 @@ function resetGame() {
     clearInterval(obstacleInterval);
     character = { x: 300, y: 400, width: 60, height: 50, dy: 0, jumping: false };
     obstacles = [];
-    score = 0;
+    lives = 3;
     gameOver = false;
-    obstacleCount = 0;
     bgmoveX = 0;
     obsspeed = 4;
     totalDistance = 0;
+    time = 3600;
     speedBoost = false;
     speedReduction = false;
-    gameStarted = false; 
     lastTime = 0;
     startGame();
+}
+
+// CHECKPOINT FUNCTION
+function cp(checker) {
+    clearInterval(obstacleInterval);
+    character = { x: 300, y: 400, width: 60, height: 50, dy: 0, jumping: false };
+    obstacles = [];
+    bgmoveX = 0;
+    obsspeed = 4;
+    speedBoost = false;
+    totalDistance = checker;
+    speedReduction = false;
+    gameStarted = true;
+    lastTime = performance.now();
+    obstacleInterval = setInterval(createObstacle, 1500);
+}
+
+//CHECKPOINT MESSAGE FUNCTION
+function triggerCheckpoint() {
+    checkpointMessage = 'CHECKPOINT REACHED!';
+    checkpointTimer = 3000;
 }
