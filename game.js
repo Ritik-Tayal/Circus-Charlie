@@ -4,7 +4,7 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-let character = { x: 300, y: 400, width: 60, height: 50, dy: 0, jumping: false };
+let character = { x: 300, y: 380, width: 80, height: 70, dy: 0, jumping: false };
 let obstacles = [];
 let gameOver = false;
 let gameStarted = false;
@@ -20,7 +20,7 @@ let lives = 3;
 let startpoint = 0;
 let checkpoint1 = 5000;
 let checkpoint2 = 15000;
-let time = 3600;
+let time = 3000;
 
 let isMovingLeft = false;
 let isMovingRight = false;
@@ -31,7 +31,7 @@ let speedReduction = false;
 
 // HOMESCREEN
 const initialImage = new Image();
-initialImage.src = 'resources/logocc.png';
+initialImage.src = 'resources/frontpage.png';
 
 //BACKGROUND
 const backgroundImage = new Image();
@@ -46,15 +46,15 @@ const obstacleImage = new Image();
 obstacleImage.src = 'resources/ringOfFire.gif';
 
 // CHECKPOINT MESSAGE
-let checkpointMessage = '';  // Store the checkpoint message
-let checkpointTimer = 0;     // Timer to display the checkpoint message
+let checkpointMessage = '';
+let checkpointTimer = 0;
 
 // OBSTACLE CREATION
 function createObstacle() {
     let height = 50;
     let width = 50;
 
-    const obstacle = { x: canvas.width, y: 420 - height, width: width, height: height };
+    const obstacle = { x: canvas.width, y: 430 - height, width: width, height: height };
     obstacles.push(obstacle);
 }
 
@@ -82,8 +82,8 @@ function update(deltaTime) {
         character.dy += gravity;
         character.y += character.dy;
 
-        if (character.y >= 400) {
-            character.y = 400;
+        if (character.y >= 380) {
+            character.y = 380;
             character.jumping = false;
             character.dy = 0;
         }
@@ -208,13 +208,20 @@ function gameLoop(timestamp) {
     ctx.font = '25px myFont';
     ctx.fillText('TD: ' + totalDistance, 40, 670);
     ctx.fillText('Lives: ' + lives, 40, 700);
-    ctx.fillText('Time left: ' + time, 40, 640);
-
+    if(time > 500)
+    {
+        ctx.fillText('Time left: ' + time, 40, 640);
+    }
+    else {
+        ctx.fillStyle = 'red';
+        ctx.font = '32px myFont';
+        ctx.fillText('Time left: ' + time, 40, 640)
+    }
     // DISPLAY 'CHECKPOINT' FOR 3S
     if (checkpointMessage && checkpointTimer > 0) {
         ctx.fillStyle = 'black';
         ctx.font = '40px myFont';
-        ctx.fillText(checkpointMessage, canvas.width / 2 - 400, canvas.height / 2);
+        ctx.fillText(checkpointMessage, canvas.width / 2 - 380, canvas.height / 2);
         checkpointTimer -= deltaTime;
     } else {
         checkpointMessage = '';
@@ -235,6 +242,9 @@ function jump() {
 window.onload = function() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(initialImage, 0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'white';
+    ctx.font = '50px myFont';
+    ctx.fillText('Press P to Play', canvas.width/2 - 400, canvas.height/2 + 100);
 };
 
 document.addEventListener('keydown', (event) => {
@@ -280,14 +290,14 @@ function startGame() {
 // RESET GAME
 function resetGame() {
     clearInterval(obstacleInterval);
-    character = { x: 300, y: 400, width: 60, height: 50, dy: 0, jumping: false };
+    character = { x: 300, y: 380, width: 80, height: 70, dy: 0, jumping: false };
     obstacles = [];
     lives = 3;
     gameOver = false;
     bgmoveX = 0;
     obsspeed = 4;
     totalDistance = 0;
-    time = 3600;
+    time = 3000;
     speedBoost = false;
     speedReduction = false;
     lastTime = 0;
@@ -297,7 +307,7 @@ function resetGame() {
 // CHECKPOINT FUNCTION
 function cp(checker) {
     clearInterval(obstacleInterval);
-    character = { x: 300, y: 400, width: 60, height: 50, dy: 0, jumping: false };
+    character = { x: 300, y: 380, width: 80, height: 70, dy: 0, jumping: false };
     obstacles = [];
     bgmoveX = 0;
     obsspeed = 4;
@@ -312,5 +322,5 @@ function cp(checker) {
 //CHECKPOINT MESSAGE FUNCTION
 function triggerCheckpoint() {
     checkpointMessage = 'CHECKPOINT REACHED!';
-    checkpointTimer = 3000;
+    checkpointTimer = 2500;
 }
