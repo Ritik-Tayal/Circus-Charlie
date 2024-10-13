@@ -21,10 +21,11 @@ let startpoint = 0;
 let checkpoint1 = 5000;
 let checkpoint2 = 15000;
 let time = 3000;
+let obtime = 1500;
 
 let isMovingLeft = false;
 let isMovingRight = false;
-const moveSpeed = 5;
+let moveSpeed = 10;
 let lastTime = 0; // TRACKING TIME
 let speedBoost = false;
 let speedReduction = false;
@@ -242,9 +243,11 @@ function jump() {
 window.onload = function() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(initialImage, 0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'white';
-    ctx.font = '50px myFont';
-    ctx.fillText('Press P to Play', canvas.width/2 - 400, canvas.height/2 + 100);
+    setTimeout(() => {
+        ctx.fillStyle = 'white';
+        ctx.font = '70px';
+        ctx.fillText('Press P to Play', canvas.width/2 - 250, canvas.height/2 + 100);
+    },1000);
 };
 
 document.addEventListener('keydown', (event) => {
@@ -284,7 +287,7 @@ function startGame() {
     gameStarted = true;
     lastTime = performance.now();
     gameLoop(lastTime);
-    obstacleInterval = setInterval(createObstacle, 1500);
+    obstacleInterval = setInterval(createObstacle, obtime);
 }
 
 // RESET GAME
@@ -295,6 +298,8 @@ function resetGame() {
     lives = 3;
     gameOver = false;
     bgmoveX = 0;
+    moveSpeed = 10;
+    obtime = 1500;
     obsspeed = 4;
     totalDistance = 0;
     time = 3000;
@@ -316,11 +321,14 @@ function cp(checker) {
     speedReduction = false;
     gameStarted = true;
     lastTime = performance.now();
-    obstacleInterval = setInterval(createObstacle, 1500);
+    obstacleInterval = setInterval(createObstacle, obtime);
 }
 
 //CHECKPOINT MESSAGE FUNCTION
 function triggerCheckpoint() {
     checkpointMessage = 'CHECKPOINT REACHED!';
     checkpointTimer = 2500;
+    moveSpeed += 2;
+    clearInterval(obstacleInterval);
+    obstacleInterval = setInterval(createObstacle, obtime-500)
 }
