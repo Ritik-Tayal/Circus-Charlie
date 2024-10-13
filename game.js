@@ -10,10 +10,15 @@ let gameOver = false;
 let gameStarted = false;
 let obstacleInterval;
 let bgmoveX = 0;
-showLife = false;
-showLifeOnce = true;
-lifeX = canvas.width;
-lifeY = 370;
+let showLife = false;
+let showLifeOnce = true;
+let lifeX = canvas.width;
+let lifeY = 370;
+let showShield = false;
+let showShieldOnce = true;
+let shieldX = canvas.width;
+let shieldY = 370;
+let shieldTime = 0;
 
 const gravity = 1;
 const jumpPower = -17;
@@ -62,6 +67,10 @@ specialImage.src = 'resources/checkpointer.png';
 const lifeImage = new Image();
 lifeImage.src = 'resources/xtralife.png';
 
+//SHIELD
+const shieldImage = new Image();
+shieldImage.src = 'resources/shieldeffect.png';
+
 // CHECKPOINT MESSAGE
 let checkpointMessage = '';
 let checkpointTimer = 0;
@@ -103,6 +112,11 @@ function drawLife() {
     ctx.drawImage(lifeImage, lifeX, lifeY, 80, 80);
 }
 
+//DRAW SHIELD
+function drawShield() {
+    ctx.drawImage(shieldImage, shieldX, shieldY, 55, 80);
+}
+
 // UPDATE LOGIC FOR GAME
 function update(deltaTime) {
     if (character.jumping) {
@@ -122,10 +136,18 @@ function update(deltaTime) {
         specialImageX = canvas.width; // Position it at the right edge of the screen
     }
 
+    //SHOW LIFE
     if (totalDistance >= 8800 && totalDistance < 8800 + obsspeed) {
         showLife = true;
         lifeX = canvas.width;
     }
+
+    //SHOW SHIELD
+    if (totalDistance >= 1800 && totalDistance < 1800 + obsspeed) {
+        showShield = true;
+        shieldX = canvas.width; // Position it at the right edge of the screen
+    }
+
     //MOVE LIFE IMAGE
     if (showLife && showLifeOnce) {
         drawLife();
@@ -136,6 +158,19 @@ function update(deltaTime) {
             lifeX -= moveSpeed * (deltaTime / 16);
         }
     }
+
+    //MOVE SHIELD IMAGE
+    if (showShield && showShieldOnce) {
+        drawShield();
+        if (isMovingLeft) {
+            shieldX += moveSpeed * (deltaTime / 16);
+        }
+        if (isMovingRight) {
+            shieldX -= moveSpeed * (deltaTime / 16);
+        }
+    }
+
+    //LIFE COLLISION
     if (
         showLife && // Only check collision if the extra life is visible
         character.x < lifeX + 80 && // Using lifeX for the position of the extra life
@@ -148,7 +183,19 @@ function update(deltaTime) {
         showLifeOnce = false;
     }    
 
-    // Move the special image
+    //SHIELD COLLISION
+    if (
+        showShield &&
+        character.x < shieldX + 80 &&
+        character.x + character.width > shieldX &&
+        character.y < shieldY + 80 &&
+        character.y + character.height > shieldY
+    ) {
+        shieldTime = 400;
+        showShield = false;
+        showShieldOnce = false;
+    }
+    // MOVE CHECKPOINT
     if (showSpecialImage) {
         drawCheckpoint();
         if (isMovingLeft) {
@@ -194,26 +241,32 @@ function update(deltaTime) {
     }
 
     // END GAME FOR COLLISION
-    for (let obstacle of obstacles) {
-        if (
-            character.x < obstacle.x + obstacle.width &&
-            character.x + character.width > obstacle.x &&
-            character.y < obstacle.y + obstacle.height &&
-            character.y + character.height > obstacle.y
-        ) {
-            if (lives > 1) {
-                lives--;
-                if (totalDistance >= checkpoint2) {
-                    cp(checkpoint2);
+    if(shieldTime != 0)
+    {
+        shieldTime--;
+    }
+    else {
+        for (let obstacle of obstacles) {
+            if (
+                character.x < obstacle.x + obstacle.width &&
+                character.x + character.width > obstacle.x &&
+                character.y < obstacle.y + obstacle.height &&
+                character.y + character.height > obstacle.y
+            ) {
+                if (lives > 1) {
+                    lives--;
+                    if (totalDistance >= checkpoint2) {
+                        cp(checkpoint2);
+                    }
+                    else if (totalDistance >= checkpoint1) {
+                        cp(checkpoint1);
+                    }
+                    else {
+                        cp(startpoint);
+                    }
+                } else {
+                    gameOver = true;
                 }
-                else if (totalDistance >= checkpoint1) {
-                    cp(checkpoint1);
-                }
-                else {
-                    cp(startpoint);
-                }
-            } else {
-                gameOver = true;
             }
         }
     }
@@ -288,8 +341,14 @@ function gameLoop(timestamp) {
     }
     else {
         ctx.fillStyle = 'red';
-        ctx.font = '32px myFont';
+        ctx.font = '30px myFont';
         ctx.fillText('Time left: ' + time, 40, 640)
+    }
+    if(shieldTime > 0)
+    {
+        ctx.fillStyle = 'black';
+        ctx.font = '30px myFont';
+        ctx.fillText('Immunity: ' + shieldTime, 40, 600);
     }
     // DISPLAY 'CHECKPOINT' FOR 3S
     if (checkpointMessage && checkpointTimer > 0) {
@@ -374,6 +433,7 @@ function resetGame() {
     moveSpeed = 10;
     obtime = 1500;
     showLifeOnce = true;
+    showShieldOnce = true;
     obsspeed = 7;
     totalDistance = 0;
     time = 3000;
