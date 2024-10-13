@@ -4,7 +4,7 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-let character = { x: 300, y: 380, width: 80, height: 70, dy: 0, jumping: false };
+let character = { x: 300, y: 380, width: 80, height: 70, dy: 0, jumping: false};
 let obstacles = [];
 let gameOver = false;
 let gameStarted = false;
@@ -32,9 +32,10 @@ let checkpoint2 = 15000;
 let time = 3000;
 let obtime = 1500;
 let showSpecialImage = false;
-let specialImageX = canvas.width; // Start the image off-screen
-let specialImageY = 290; // Same Y position as the player or customize
-
+let specialImageX = canvas.width;
+let specialImageY = 290;
+let doublejump = false;
+let djenabled = false;
 
 let isMovingLeft = false;
 let isMovingRight = false;
@@ -119,7 +120,7 @@ function drawShield() {
 
 // UPDATE LOGIC FOR GAME
 function update(deltaTime) {
-    if (character.jumping) {
+    if (character.jumping && !doublejump) {
         character.dy += gravity;
         character.y += character.dy;
 
@@ -129,11 +130,23 @@ function update(deltaTime) {
             character.dy = 0;
         }
     }
+    else if(doublejump) {
+        character.dy += gravity;
+        character.y += character.dy;
 
-    // Check if totalDistance is 3800 to show the special image
+        if (character.y >= 380) {
+            character.y = 380;
+            character.jumping = false;
+            doublejump = false;
+            character.dy = 0;
+        }
+    }
+    
+
+    //SHOW CHECKPOINT
     if ((totalDistance >= 3800 && totalDistance < 3800 + obsspeed) || (totalDistance >= 13800 && totalDistance < 13800 + obsspeed)) {
         showSpecialImage = true;
-        specialImageX = canvas.width; // Position it at the right edge of the screen
+        specialImageX = canvas.width;
     }
 
     //SHOW LIFE
@@ -145,7 +158,7 @@ function update(deltaTime) {
     //SHOW SHIELD
     if (totalDistance >= 1800 && totalDistance < 1800 + obsspeed) {
         showShield = true;
-        shieldX = canvas.width; // Position it at the right edge of the screen
+        shieldX = canvas.width;
     }
 
     //MOVE LIFE IMAGE
@@ -172,14 +185,14 @@ function update(deltaTime) {
 
     //LIFE COLLISION
     if (
-        showLife && // Only check collision if the extra life is visible
-        character.x < lifeX + 80 && // Using lifeX for the position of the extra life
+        showLife &&
+        character.x < lifeX + 80 &&
         character.x + character.width > lifeX &&
-        character.y < lifeY + 80 && // Using lifeY for the position of the extra life
+        character.y < lifeY + 80 &&
         character.y + character.height > lifeY
     ) {
-        lives++;  // Grant an extra life
-        showLife = false; // Hide the extra life after collision
+        lives++;
+        showLife = false;
         showLifeOnce = false;
     }    
 
@@ -283,6 +296,10 @@ function update(deltaTime) {
         }
         if (isMovingRight) {
             totalDistance += moveSpeed;
+            if(totalDistance > 5000)
+            {
+                djenabled = true;
+            }
         }
         if (isMovingLeft) {
             if(totalDistance >= 5){
@@ -369,6 +386,11 @@ function jump() {
         character.dy = jumpPower;
         character.jumping = true;
     }
+    else if(character.jumping && !doublejump && djenabled)
+    {
+        character.dy = jumpPower;
+        doublejump = true;
+    }
 }
 
 // FIRST VISIBLE SCREEN
@@ -377,8 +399,8 @@ window.onload = function() {
     ctx.drawImage(initialImage, 0, 0, canvas.width, canvas.height);
     setTimeout(() => {
         ctx.fillStyle = 'white';
-        ctx.font = '70px';
-        ctx.fillText('Press P to Play', canvas.width/2 - 250, canvas.height/2 + 100);
+        ctx.font = '55px myFont';
+        ctx.fillText('Press P to Play', canvas.width/2 - 400, canvas.height/2 + 100);
     },1000);
 };
 
@@ -430,6 +452,7 @@ function resetGame() {
     lives = 3;
     gameOver = false;
     bgmoveX = 0;
+    djenabled = false;
     moveSpeed = 10;
     obtime = 1500;
     showLifeOnce = true;
@@ -453,6 +476,7 @@ function cp(checker) {
     showSpecialImage = false;
     speedBoost = false;
     totalDistance = checker;
+    if(checker < 5000) { djenabled = false; }
     speedReduction = false;
     gameStarted = true;
     lastTime = performance.now();
