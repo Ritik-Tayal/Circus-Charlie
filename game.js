@@ -6,6 +6,7 @@ canvas.height = window.innerHeight;
 
 let character = { x: 300, y: 380, width: 80, height: 70, dy: 0, jumping: false};
 let obstacles = [];
+let obstacles2 = [];
 let gameOver = false;
 let gameStarted = false;
 let obstacleInterval;
@@ -19,17 +20,21 @@ let showShieldOnce = true;
 let shieldX = canvas.width;
 let shieldY = 370;
 let shieldTime = 0;
+let lastOb2X = 0; // Store the last 'x' position of ob2
+let ob2Interval; // Store the interval for ob2 creation
+const ob2Time = 2000; // Time interval for ob2 creation in milliseconds
+
+
 
 const gravity = 1;
 const jumpPower = -17;
 let obsspeed = 7;
-const maxDistance = 20000;
+let ob2speed = 5;
 let totalDistance = 0;
-let lives = 3;
+let lives = 1;
 let startpoint = 0;
 let checkpoint1 = 5000;
 let checkpoint2 = 15000;
-let time = 3000;
 let obtime = 1500;
 let showSpecialImage = false;
 let specialImageX = canvas.width;
@@ -56,9 +61,13 @@ backgroundImage.src = 'resources/backgroundimage.gif';
 const playerImage = new Image();
 playerImage.src = 'resources/charlieclown.gif';
 
-// OBSTACLE1
+// OBSTACLE 1
 const obstacleImage = new Image();
 obstacleImage.src = 'resources/ringOfFire.gif';
+
+//OBSTACLE 2
+const ob2Image = new Image();
+ob2Image.src = 'resources/download.png';
 
 // CHECKPOINT
 const specialImage = new Image();
@@ -83,7 +92,17 @@ function createObstacle() {
 
     const obstacle = { x: canvas.width, y: 430 - height, width: width, height: height };
     obstacles.push(obstacle);
+
 }
+
+//OBSTACLE 2 CREATION
+// if(totalDistance > 15000) {
+function createOb2() {
+    const height = 50;
+    const ob2  = { x: canvas.width, y: 430 - height, width: 50, height: 50};
+    obstacles2.push(ob2);
+}
+// }
 
 // DRAW BACKGROUND
 function drawBackground() {
@@ -96,10 +115,17 @@ function drawCharacter() {
     ctx.drawImage(playerImage, character.x, character.y, character.width, character.height);
 }
 
-// DRAW OBSTACLE
+// DRAW OBSTACLE 1
 function drawObstacles() {
     for (let obstacle of obstacles) {
         ctx.drawImage(obstacleImage, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+    }
+}
+
+// DRAW OBSTACLE 2
+function drawOb2() {
+    for (let ob2 of obstacles2) {
+        ctx.drawImage(ob2Image, ob2.x, ob2.y, ob2.width, ob2.height);
     }
 }
 
@@ -142,6 +168,8 @@ function update(deltaTime) {
         }
     }
     
+    // REMOVE OFFSCREEN OBSTACLES 2
+    obstacles2 = obstacles2.filter(ob2 => ob2.x + ob2.width > 0);
 
     //SHOW CHECKPOINT
     if ((totalDistance >= 3800 && totalDistance < 3800 + obsspeed) || (totalDistance >= 13800 && totalDistance < 13800 + obsspeed)) {
@@ -226,15 +254,23 @@ function update(deltaTime) {
     // SPEED CHANGE
     if (isMovingRight && !speedBoost) {
         obsspeed += moveSpeed;
+        ob2speed += moveSpeed;
         speedBoost = true;
     } else if (isMovingLeft && !speedReduction) {
         obsspeed = moveSpeed - obsspeed;
+        ob2speed = moveSpeed - ob2speed;
         speedReduction = true;
     }
 
     // MOVING OBSTACLES WITH UNIFORM SPEED
     for (let obstacle of obstacles) {
         obstacle.x -= obsspeed * (deltaTime / 16);
+    }
+
+    //
+    // MOVING OBSTACLES WITH UNIFORM SPEED
+    for (let ob2 of obstacles2) {
+        ob2.x -= ob2speed * (deltaTime / 16);
     }
 
     // BACKGROUND MOVEMENT
@@ -282,6 +318,28 @@ function update(deltaTime) {
                 }
             }
         }
+        for(let ob2 of obstacles2) {
+            if(character.x < ob2.x + ob2.width &&
+                character.x + character.width > ob2.x &&
+                character.y < ob2.y + ob2.height &&
+                character.y + character.height > ob2.y) {
+                    if (lives > 1) {
+                        lives--;
+                        if (totalDistance >= checkpoint2) {
+                            cp(checkpoint2);
+                        }
+                        else if (totalDistance >= checkpoint1) {
+                            cp(checkpoint1);
+                        }
+                        else {
+                            cp(startpoint);
+                        }
+                    } else {
+                        gameOver = true;
+                    }
+                }
+            }
+        }
     }
 
     // REMOVE OFFSCREEN OBSTACLES
@@ -289,11 +347,7 @@ function update(deltaTime) {
 
     //DISTANCE COUNTING
     if (!gameOver) {
-        time--;
-        if(time <= 0)
-        {
-            gameOver = true;
-        }
+        
         if (isMovingRight) {
             totalDistance += moveSpeed;
             if(totalDistance > 5000)
@@ -318,11 +372,8 @@ function update(deltaTime) {
             triggerCheckpoint();
         }
 
-        if (totalDistance >= maxDistance) {
-            gameOver = true;
-        }
     }
-}
+
 
 // GAME LOOP
 function gameLoop(timestamp) {
@@ -335,32 +386,23 @@ function gameLoop(timestamp) {
     if (gameOver) {
         ctx.fillStyle = 'black';
         ctx.font = '30px myFont';
-        if (totalDistance >= maxDistance) {
-            ctx.fillText('You Win!', canvas.width / 2 - 110, canvas.height / 2 - 11);
-        } else {
-            ctx.fillText('Game Over', canvas.width / 2 - 113, canvas.height / 2 - 11);
-        }
+       
+        ctx.fillText('Game Over', canvas.width / 2 - 113, canvas.height / 2 - 11);
+    
         ctx.fillText('Press R to Restart', canvas.width / 2 - 235, canvas.height / 2 + 68);
         return;
     }
 
     drawCharacter();
     drawObstacles();
+    drawOb2();
     update(deltaTime);
 
     ctx.fillStyle = 'black';
     ctx.font = '25px myFont';
     ctx.fillText('TD: ' + totalDistance, 40, 670);
     ctx.fillText('Lives: ' + lives, 40, 700);
-    if(time > 500)
-    {
-        ctx.fillText('Time left: ' + time, 40, 640);
-    }
-    else {
-        ctx.fillStyle = 'red';
-        ctx.font = '30px myFont';
-        ctx.fillText('Time left: ' + time, 40, 640)
-    }
+   
     if(shieldTime > 0)
     {
         ctx.fillStyle = 'black';
@@ -428,11 +470,13 @@ document.addEventListener('keyup', (event) => {
         isMovingLeft = false;
         speedReduction = false;
         obsspeed = 7;
+        ob2speed = 5;
     }
     if (event.code === 'ArrowRight') {
         isMovingRight = false;
         speedBoost = false;
         obsspeed = 7;
+        ob2speed = 5;
     }
 });
 
@@ -442,14 +486,19 @@ function startGame() {
     lastTime = performance.now();
     gameLoop(lastTime);
     obstacleInterval = setInterval(createObstacle, obtime);
+    if(totalDistance >= checkpoint2) {
+        ob2Interval = setInterval(createOb2, ob2Time);
+    }
 }
 
 // RESET GAME
 function resetGame() {
     clearInterval(obstacleInterval);
+    clearInterval(ob2Interval);
     character = { x: 300, y: 380, width: 80, height: 70, dy: 0, jumping: false };
     obstacles = [];
-    lives = 3;
+    obstacles2 = [];
+    lives = 1;
     gameOver = false;
     bgmoveX = 0;
     djenabled = false;
@@ -459,7 +508,7 @@ function resetGame() {
     showShieldOnce = true;
     obsspeed = 7;
     totalDistance = 0;
-    time = 3000;
+    // time = 3000;
     speedBoost = false;
     speedReduction = false;
     lastTime = 0;
@@ -469,6 +518,7 @@ function resetGame() {
 // CHECKPOINT FUNCTION
 function cp(checker) {
     clearInterval(obstacleInterval);
+    clearInterval(ob2Interval)
     character = { x: 300, y: 380, width: 80, height: 70, dy: 0, jumping: false };
     obstacles = [];
     bgmoveX = 0;
@@ -481,6 +531,9 @@ function cp(checker) {
     gameStarted = true;
     lastTime = performance.now();
     obstacleInterval = setInterval(createObstacle, obtime);
+    if(totalDistance >= checkpoint2) {
+        ob2Interval = setInterval(createOb2, ob2Time);
+    }
 }
 
 //CHECKPOINT MESSAGE FUNCTION
@@ -490,5 +543,5 @@ function triggerCheckpoint() {
     moveSpeed += 2;
     obsspeed += 2;
     clearInterval(obstacleInterval);
-    obstacleInterval = setInterval(createObstacle, obtime-600);
+    obstacleInterval = setInterval(createObstacle, obtime);
 }
