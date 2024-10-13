@@ -10,10 +10,14 @@ let gameOver = false;
 let gameStarted = false;
 let obstacleInterval;
 let bgmoveX = 0;
+showLife = false;
+showLifeOnce = true;
+lifeX = canvas.width;
+lifeY = 370;
 
 const gravity = 1;
 const jumpPower = -17;
-let obsspeed = 4;
+let obsspeed = 7;
 const maxDistance = 20000;
 let totalDistance = 0;
 let lives = 3;
@@ -22,6 +26,10 @@ let checkpoint1 = 5000;
 let checkpoint2 = 15000;
 let time = 3000;
 let obtime = 1500;
+let showSpecialImage = false;
+let specialImageX = canvas.width; // Start the image off-screen
+let specialImageY = 290; // Same Y position as the player or customize
+
 
 let isMovingLeft = false;
 let isMovingRight = false;
@@ -45,6 +53,14 @@ playerImage.src = 'resources/charlieclown.gif';
 // OBSTACLE1
 const obstacleImage = new Image();
 obstacleImage.src = 'resources/ringOfFire.gif';
+
+// CHECKPOINT
+const specialImage = new Image();
+specialImage.src = 'resources/checkpointer.png';
+
+//EXTRA LIFE
+const lifeImage = new Image();
+lifeImage.src = 'resources/xtralife.png';
 
 // CHECKPOINT MESSAGE
 let checkpointMessage = '';
@@ -77,6 +93,16 @@ function drawObstacles() {
     }
 }
 
+//DRAW CHECKPOINT
+function drawCheckpoint() {
+    ctx.drawImage(specialImage, specialImageX, specialImageY, 180, 180);
+}
+
+//DRAW EXTRA LIFE
+function drawLife() {
+    ctx.drawImage(lifeImage, lifeX, lifeY, 80, 80);
+}
+
 // UPDATE LOGIC FOR GAME
 function update(deltaTime) {
     if (character.jumping) {
@@ -90,12 +116,59 @@ function update(deltaTime) {
         }
     }
 
+    // Check if totalDistance is 3800 to show the special image
+    if ((totalDistance >= 3800 && totalDistance < 3800 + obsspeed) || (totalDistance >= 13800 && totalDistance < 13800 + obsspeed)) {
+        showSpecialImage = true;
+        specialImageX = canvas.width; // Position it at the right edge of the screen
+    }
+
+    if (totalDistance >= 8800 && totalDistance < 8800 + obsspeed) {
+        showLife = true;
+        lifeX = canvas.width;
+    }
+    //MOVE LIFE IMAGE
+    if (showLife && showLifeOnce) {
+        drawLife();
+        if (isMovingLeft) {
+            lifeX += moveSpeed * (deltaTime / 16);
+        }
+        if (isMovingRight) {
+            lifeX -= moveSpeed * (deltaTime / 16);
+        }
+    }
+    if (
+        showLife && // Only check collision if the extra life is visible
+        character.x < lifeX + 80 && // Using lifeX for the position of the extra life
+        character.x + character.width > lifeX &&
+        character.y < lifeY + 80 && // Using lifeY for the position of the extra life
+        character.y + character.height > lifeY
+    ) {
+        lives++;  // Grant an extra life
+        showLife = false; // Hide the extra life after collision
+        showLifeOnce = false;
+    }    
+
+    // Move the special image
+    if (showSpecialImage) {
+        drawCheckpoint();
+        if (isMovingLeft) {
+            specialImageX += moveSpeed * (deltaTime / 16);
+        }
+        if (isMovingRight) {
+            specialImageX -= moveSpeed * (deltaTime / 16);
+        }
+    }
+
+    if ((totalDistance > 5000 && totalDistance <5100) || (totalDistance > 15000 && totalDistance <15100)) {
+        showSpecialImage = false;
+    }
+
     // SPEED CHANGE
     if (isMovingRight && !speedBoost) {
         obsspeed += moveSpeed;
         speedBoost = true;
     } else if (isMovingLeft && !speedReduction) {
-        obsspeed = Math.max(moveSpeed - obsspeed, 2);
+        obsspeed = moveSpeed - obsspeed;
         speedReduction = true;
     }
 
@@ -273,12 +346,12 @@ document.addEventListener('keyup', (event) => {
     if (event.code === 'ArrowLeft') {
         isMovingLeft = false;
         speedReduction = false;
-        obsspeed = 4;
+        obsspeed = 7;
     }
     if (event.code === 'ArrowRight') {
         isMovingRight = false;
         speedBoost = false;
-        obsspeed = 4;
+        obsspeed = 7;
     }
 });
 
@@ -300,7 +373,8 @@ function resetGame() {
     bgmoveX = 0;
     moveSpeed = 10;
     obtime = 1500;
-    obsspeed = 4;
+    showLifeOnce = true;
+    obsspeed = 7;
     totalDistance = 0;
     time = 3000;
     speedBoost = false;
@@ -315,7 +389,8 @@ function cp(checker) {
     character = { x: 300, y: 380, width: 80, height: 70, dy: 0, jumping: false };
     obstacles = [];
     bgmoveX = 0;
-    obsspeed = 4;
+    obsspeed = 7;
+    showSpecialImage = false;
     speedBoost = false;
     totalDistance = checker;
     speedReduction = false;
@@ -329,6 +404,7 @@ function triggerCheckpoint() {
     checkpointMessage = 'CHECKPOINT REACHED!';
     checkpointTimer = 2500;
     moveSpeed += 2;
+    obsspeed += 2;
     clearInterval(obstacleInterval);
-    obstacleInterval = setInterval(createObstacle, obtime-500)
+    obstacleInterval = setInterval(createObstacle, obtime-600);
 }
