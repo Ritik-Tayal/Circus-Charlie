@@ -20,7 +20,6 @@ let showShieldOnce = true;
 let shieldX = canvas.width;
 let shieldY = 370;
 let shieldTime = 0;
-let lastOb2X = 0; // Store the last 'x' position of ob2
 let ob2Interval; // Store the interval for ob2 creation
 const ob2Time = 2000; // Time interval for ob2 creation in milliseconds
 
@@ -29,7 +28,7 @@ const ob2Time = 2000; // Time interval for ob2 creation in milliseconds
 const gravity = 1;
 const jumpPower = -17;
 let obsspeed = 7;
-let ob2speed = 5;
+let ob2speed = 6;
 let totalDistance = 0;
 let lives = 1;
 let startpoint = 0;
@@ -88,7 +87,7 @@ let checkpointTimer = 0;
 // OBSTACLE CREATION
 function createObstacle() {
     let height = 50;
-    let width = 50;
+    let width = 30;
 
     const obstacle = { x: canvas.width, y: 430 - height, width: width, height: height };
     obstacles.push(obstacle);
@@ -96,13 +95,11 @@ function createObstacle() {
 }
 
 //OBSTACLE 2 CREATION
-// if(totalDistance > 15000) {
 function createOb2() {
     const height = 50;
     const ob2  = { x: canvas.width, y: 430 - height, width: 50, height: 50};
     obstacles2.push(ob2);
 }
-// }
 
 // DRAW BACKGROUND
 function drawBackground() {
@@ -267,7 +264,7 @@ function update(deltaTime) {
         obstacle.x -= obsspeed * (deltaTime / 16);
     }
 
-    //
+    
     // MOVING OBSTACLES WITH UNIFORM SPEED
     for (let ob2 of obstacles2) {
         ob2.x -= ob2speed * (deltaTime / 16);
@@ -339,31 +336,30 @@ function update(deltaTime) {
                     }
                 }
             }
-        }
     }
-
+    
     // REMOVE OFFSCREEN OBSTACLES
     obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
-
+    
     //DISTANCE COUNTING
     if (!gameOver) {
         
         if (isMovingRight) {
             totalDistance += moveSpeed;
             if(totalDistance > 5000)
-            {
-                djenabled = true;
+                {
+                    djenabled = true;
+                }
+            }
+            if (isMovingLeft) {
+                if(totalDistance >= 5){
+            totalDistance -= moveSpeed;
+            }
+            else{
+                totalDistance = 0;
             }
         }
-        if (isMovingLeft) {
-            if(totalDistance >= 5){
-            totalDistance -= moveSpeed;
-        }
-        else{
-            totalDistance = 0;
-        }
-    }
-
+        
         //CHECKPOINT MESSAGE
         if (totalDistance >= checkpoint1 && totalDistance < checkpoint1 + obsspeed) {
             triggerCheckpoint();
@@ -371,8 +367,9 @@ function update(deltaTime) {
         if (totalDistance >= checkpoint2 && totalDistance < checkpoint2 + obsspeed) {
             triggerCheckpoint();
         }
-
+        
     }
+}
 
 
 // GAME LOOP
@@ -486,10 +483,10 @@ function startGame() {
     lastTime = performance.now();
     gameLoop(lastTime);
     obstacleInterval = setInterval(createObstacle, obtime);
-    if(totalDistance >= checkpoint2) {
+    // if(totalDistance >= checkpoint2) {
         ob2Interval = setInterval(createOb2, ob2Time);
-    }
 }
+// }
 
 // RESET GAME
 function resetGame() {
@@ -508,7 +505,6 @@ function resetGame() {
     showShieldOnce = true;
     obsspeed = 7;
     totalDistance = 0;
-    // time = 3000;
     speedBoost = false;
     speedReduction = false;
     lastTime = 0;
@@ -518,9 +514,10 @@ function resetGame() {
 // CHECKPOINT FUNCTION
 function cp(checker) {
     clearInterval(obstacleInterval);
-    clearInterval(ob2Interval)
+    clearInterval(ob2Interval);
     character = { x: 300, y: 380, width: 80, height: 70, dy: 0, jumping: false };
     obstacles = [];
+    obstacles2 = [];
     bgmoveX = 0;
     obsspeed = 7;
     showSpecialImage = false;
@@ -531,9 +528,9 @@ function cp(checker) {
     gameStarted = true;
     lastTime = performance.now();
     obstacleInterval = setInterval(createObstacle, obtime);
-    if(totalDistance >= checkpoint2) {
+    // if(totalDistance >= checkpoint2) {
         ob2Interval = setInterval(createOb2, ob2Time);
-    }
+    // }
 }
 
 //CHECKPOINT MESSAGE FUNCTION
@@ -543,5 +540,7 @@ function triggerCheckpoint() {
     moveSpeed += 2;
     obsspeed += 2;
     clearInterval(obstacleInterval);
+    clearInterval(ob2Interval);
+    ob2Interval = setInterval(createOb2, ob2Time);
     obstacleInterval = setInterval(createObstacle, obtime);
 }
