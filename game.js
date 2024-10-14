@@ -68,10 +68,6 @@ obstacleImage.src = 'resources/ringOfFire.gif';
 const ob2Image = new Image();
 ob2Image.src = 'resources/download.png';
 
-// CHECKPOINT
-const specialImage = new Image();
-specialImage.src = 'resources/checkpointer.png';
-
 //EXTRA LIFE
 const lifeImage = new Image();
 lifeImage.src = 'resources/xtralife.png';
@@ -83,6 +79,9 @@ shieldImage.src = 'resources/shieldeffect.png';
 // CHECKPOINT MESSAGE
 let checkpointMessage = '';
 let checkpointTimer = 0;
+let timeSinceLastCheckpoint = 0;
+const checkpointInterval = 25000;
+let cpdistance = 0;
 
 // OBSTACLE CREATION
 function createObstacle() {
@@ -126,11 +125,6 @@ function drawOb2() {
     }
 }
 
-//DRAW CHECKPOINT
-function drawCheckpoint() {
-    ctx.drawImage(specialImage, specialImageX, specialImageY, 180, 180);
-}
-
 //DRAW EXTRA LIFE
 function drawLife() {
     ctx.drawImage(lifeImage, lifeX, lifeY, 80, 80);
@@ -165,14 +159,17 @@ function update(deltaTime) {
         }
     }
     
+    // Update time since last checkpoint
+    timeSinceLastCheckpoint += deltaTime;
+
+    // Trigger checkpoint if 30 seconds have passed
+    if (timeSinceLastCheckpoint >= checkpointInterval) {
+        triggerCheckpoint();
+        timeSinceLastCheckpoint = 0;  // Reset timer after checkpoint
+    }
+
     // REMOVE OFFSCREEN OBSTACLES 2
     obstacles2 = obstacles2.filter(ob2 => ob2.x + ob2.width > 0);
-
-    //SHOW CHECKPOINT
-    if ((totalDistance >= 3800 && totalDistance < 3800 + obsspeed) || (totalDistance >= 13800 && totalDistance < 13800 + obsspeed)) {
-        showSpecialImage = true;
-        specialImageX = canvas.width;
-    }
 
     //SHOW LIFE
     if (totalDistance >= 8800 && totalDistance < 8800 + obsspeed) {
@@ -233,20 +230,6 @@ function update(deltaTime) {
         showShield = false;
         showShieldOnce = false;
     }
-    // MOVE CHECKPOINT
-    if (showSpecialImage) {
-        drawCheckpoint();
-        if (isMovingLeft) {
-            specialImageX += moveSpeed * (deltaTime / 16);
-        }
-        if (isMovingRight) {
-            specialImageX -= moveSpeed * (deltaTime / 16);
-        }
-    }
-
-    if ((totalDistance > 5000 && totalDistance <5100) || (totalDistance > 15000 && totalDistance <15100)) {
-        showSpecialImage = false;
-    }
 
     // SPEED CHANGE
     if (isMovingRight && !speedBoost) {
@@ -301,16 +284,9 @@ function update(deltaTime) {
             ) {
                 if (lives > 1) {
                     lives--;
-                    if (totalDistance >= checkpoint2) {
-                        cp(checkpoint2);
-                    }
-                    else if (totalDistance >= checkpoint1) {
-                        cp(checkpoint1);
-                    }
-                    else {
-                        cp(startpoint);
-                    }
-                } else {
+                    cp(cpdistance);
+                }
+                else {
                     gameOver = true;
                 }
             }
@@ -322,16 +298,9 @@ function update(deltaTime) {
                 character.y + character.height > ob2.y) {
                     if (lives > 1) {
                         lives--;
-                        if (totalDistance >= checkpoint2) {
-                            cp(checkpoint2);
-                        }
-                        else if (totalDistance >= checkpoint1) {
-                            cp(checkpoint1);
-                        }
-                        else {
-                            cp(startpoint);
-                        }
-                    } else {
+                        cp(cpdistance);
+                    }
+                    else {
                         gameOver = true;
                     }
                 }
@@ -358,14 +327,6 @@ function update(deltaTime) {
             else{
                 totalDistance = 0;
             }
-        }
-        
-        //CHECKPOINT MESSAGE
-        if (totalDistance >= checkpoint1 && totalDistance < checkpoint1 + obsspeed) {
-            triggerCheckpoint();
-        }
-        if (totalDistance >= checkpoint2 && totalDistance < checkpoint2 + obsspeed) {
-            triggerCheckpoint();
         }
         
     }
@@ -406,7 +367,7 @@ function gameLoop(timestamp) {
         ctx.font = '30px myFont';
         ctx.fillText('Immunity: ' + shieldTime, 40, 600);
     }
-    // DISPLAY 'CHECKPOINT' FOR 3S
+    // DISPLAY 'CHECKPOINT'
     if (checkpointMessage && checkpointTimer > 0) {
         ctx.fillStyle = 'black';
         ctx.font = '40px myFont';
@@ -497,10 +458,12 @@ function resetGame() {
     obstacles2 = [];
     lives = 1;
     gameOver = false;
+    checkpointTimer = 0;
     bgmoveX = 0;
     djenabled = false;
     moveSpeed = 10;
     obtime = 1500;
+    checkpointTimer = 0;
     showLifeOnce = true;
     showShieldOnce = true;
     obsspeed = 7;
@@ -519,11 +482,8 @@ function cp(checker) {
     obstacles = [];
     obstacles2 = [];
     bgmoveX = 0;
-    obsspeed = 7;
-    showSpecialImage = false;
     speedBoost = false;
     totalDistance = checker;
-    if(checker < 5000) { djenabled = false; }
     speedReduction = false;
     gameStarted = true;
     lastTime = performance.now();
@@ -536,9 +496,9 @@ function cp(checker) {
 //CHECKPOINT MESSAGE FUNCTION
 function triggerCheckpoint() {
     checkpointMessage = 'CHECKPOINT REACHED!';
-    checkpointTimer = 2500;
-    moveSpeed += 2;
-    obsspeed += 2;
+    checkpointTimer = 2000;  // Display message for 2.5 seconds
+    if(moveSpeed <16) {moveSpeed += 2;}
+    if (obsspeed < 10){obsspeed += 2;}
     clearInterval(obstacleInterval);
     clearInterval(ob2Interval);
     ob2Interval = setInterval(createOb2, ob2Time);
