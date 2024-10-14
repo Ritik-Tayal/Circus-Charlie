@@ -7,6 +7,12 @@ canvas.height = window.innerHeight;
 let character = { x: 300, y: 380, width: 80, height: 70, dy: 0, jumping: false};
 let obstacles = [];
 let obstacles2 = [];
+let leftwings = [];
+let leftwingInterval;
+let rightwings = [];
+let rightwingInterval;
+let tops = [];
+let topsInterval;
 let shields = [];
 let lifes = [];
 let gameOver = false;
@@ -47,7 +53,7 @@ let djenabled = false;
 
 let isMovingLeft = false;
 let isMovingRight = false;
-let moveSpeed = 10;
+let moveSpeed = 9;
 let lastTime = 0;
 let speedBoost = false;
 let speedReduction = false;
@@ -60,13 +66,25 @@ initialImage.src = 'resources/frontpage.png';
 const backgroundImage = new Image();
 backgroundImage.src = 'resources/backgroundimage.gif';
 
+//LEFT WING
+const leftImage = new Image();
+leftImage.src = 'resources/lefthoop.png';
+
 //CHARLIE
 const playerImage = new Image();
 playerImage.src = 'resources/charlieclown.gif';
 
+//RIGHTWING
+const rightImage = new Image();
+rightImage.src = 'resources/righthoop1.png';
+
 // OBSTACLE 1
 const obstacleImage = new Image();
-obstacleImage.src = 'resources/ringOfFire.gif';
+obstacleImage.src = 'resources/fh1.png';
+
+//TOP OBSTACLE
+const topImage = new Image();
+topImage.src = 'resources/hooptop.png';
 
 //OBSTACLE 2
 const ob2Image = new Image();
@@ -87,14 +105,32 @@ let timeSinceLastCheckpoint = 0;
 const checkpointInterval = 25000;
 let cpdistance = 0;
 
+//LEFT WING CREATION
+function createLeftwing() {
+    const leftwing = {x: canvas.width-20, y:220, width: 50, height: 180};
+    leftwings.push(leftwing);
+}
+
 // OBSTACLE CREATION
 function createObstacle() {
     let height = 60;
-    let width = 20;
+    let width = 50;
     
-    const obstacle = { x: canvas.width, y: 430 - height, width: width, height: height };
+    const obstacle = { x: canvas.width, y: 400, width: width, height: height };
     obstacles.push(obstacle);
     
+}
+
+//RIGHT WING CREATION
+function createRightwing() {
+    const rightwing = {x: canvas.width + 20, y: 220, width: 50, height: 180};
+    rightwings.push(rightwing);
+}
+
+//TOP OBSTACLE CREATION
+function createTop() {
+    const topob = {x: canvas.width, y: 180, width: 50, height: 60};
+    tops.push(topob);
 }
 
 //OBSTACLE 2 CREATION
@@ -122,9 +158,23 @@ function drawBackground() {
     ctx.drawImage(backgroundImage, bgmoveX + canvas.width, 0, canvas.width, canvas.height);
 }
 
+//DRAW LEFTWING
+function drawLeftwing() {
+    for(let leftwing of leftwings) {
+        ctx.drawImage(leftImage, leftwing.x, leftwing.y, leftwing.width, leftwing.height);
+    }
+}
+
 // DRAW PLAYER
 function drawCharacter() {
     ctx.drawImage(playerImage, character.x, character.y, character.width, character.height);
+}
+
+//DRAW RIGHTWING
+function drawRightwing() {
+    for(let rightwing of rightwings) {
+        ctx.drawImage(rightImage, rightwing.x, rightwing.y, rightwing.width, rightwing.height);
+    }
 }
 
 // DRAW OBSTACLE 1
@@ -134,13 +184,18 @@ function drawObstacles() {
     }
 }
 
+//DRAW TOP OBSTACLE
+function drawTop() {
+    for (let topob of tops) {
+        ctx.drawImage(topImage, topob.x, topob.y, topob.width, topob.height);
+    }
+}
 //DRAW SHIELD
 function drawShields() {
     for (let shield of shields) {
         ctx.drawImage(shieldImage, shield.x, shield.y, shield.width, shield.height);
     }
 }
-
 
 // DRAW OBSTACLE 2
 function drawOb2() {
@@ -154,12 +209,6 @@ function drawLife() {
     for(let life of lifes) {
         ctx.drawImage(lifeImage, life.x, life.y, life.width, life.height);
     }
-}
-
-
-//DRAW SHIELD
-function drawShield() {
-    ctx.drawImage(shieldImage, shieldX, shieldY, 55, 80);
 }
 
 // UPDATE LOGIC FOR GAME
@@ -190,7 +239,7 @@ function update(deltaTime) {
 
     if (timeSinceLastCheckpoint >= checkpointInterval) {
         triggerCheckpoint();
-        timeSinceLastCheckpoint = 0;  // Reset timer after checkpoint
+        timeSinceLastCheckpoint = 0;
     }
 
     for (let shield of shields) {
@@ -243,8 +292,16 @@ function update(deltaTime) {
     for (let obstacle of obstacles) {
         obstacle.x -= obsspeed * (deltaTime / 16);
     }
-    
-    
+    for (let leftwing of leftwings) {
+        leftwing.x -= obsspeed * (deltaTime / 16);
+    }
+    for (let rightwing of rightwings) {
+        rightwing.x -= obsspeed * (deltaTime / 16);
+    }
+    for (let topob of tops) {
+        topob.x -= obsspeed * (deltaTime / 16);
+    }
+
     // MOVING OBSTACLES WITH UNIFORM SPEED
     for (let ob2 of obstacles2) {
         ob2.x -= ob2speed * (deltaTime / 16);
@@ -288,6 +345,22 @@ function update(deltaTime) {
                 }
             }
         }
+        for (let topob of tops) {
+            if (
+                character.x < topob.x + topob.width &&
+                character.x + character.width > topob.x &&
+                character.y < topob.y + topob.height &&
+                character.y + character.height > topob.y
+            ) {
+                if (lives > 1) {
+                    lives--;
+                    cp(cpdistance);
+                }
+                else {
+                    gameOver = true;
+                }
+            }
+        }
         for(let ob2 of obstacles2) {
             if(character.x < ob2.x + ob2.width &&
                 character.x + character.width > ob2.x &&
@@ -306,6 +379,9 @@ function update(deltaTime) {
             
         // REMOVE OFFSCREEN OBSTACLES
         obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
+        rightwings = rightwings.filter(rightwing => rightwing.x + rightwing.width > 0);
+        leftwings = leftwings.filter(leftwing => leftwing.x + leftwing.width > 0);
+        tops = tops.filter(topob => topob.x + topob.width > 0);
             
         // REMOVE OFFSCREEN OBSTACLES 2
         obstacles2 = obstacles2.filter(ob2 => ob2.x + ob2.width > 0);
@@ -359,8 +435,11 @@ function gameLoop(timestamp) {
         return;
     }
 
+    drawLeftwing();
     drawCharacter();
+    drawRightwing();
     drawObstacles();
+    drawTop();
     drawOb2();
     drawShields();
     drawLife();
@@ -456,7 +535,10 @@ function startGame() {
     lastTime = performance.now();
     gameLoop(lastTime);
     obstacleInterval = setInterval(createObstacle, obtime);
+    topsInterval = setInterval(createTop, obtime);
+    leftwingInterval = setInterval(createLeftwing, obtime);
     ob2Interval = setInterval(createOb2, ob2Time);
+    rightwingInterval = setInterval(createRightwing, obtime);
     shieldInterval = setInterval(createShield, shieldSpawnInterval);
     lifeInterval = setInterval(createLife, lifeSpawnInterval);
 }
@@ -464,12 +546,18 @@ function startGame() {
 
 // RESET GAME
 function resetGame() {
+    clearInterval(leftwingInterval);
     clearInterval(obstacleInterval);
+    clearInterval(topsInterval);
+    clearInterval(rightwingInterval);
     clearInterval(ob2Interval);
     clearInterval(shieldInterval);
-    clearInterval(lifeSpawnInterval);
+    clearInterval(lifeInterval);
     character = { x: 300, y: 380, width: 80, height: 70, dy: 0, jumping: false };
     obstacles = [];
+    leftwings = [];
+    rightwings = [];
+    tops =[];
     obstacles2 = [];
     shields = [];
     lifes = [];
