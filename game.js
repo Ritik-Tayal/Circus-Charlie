@@ -7,7 +7,7 @@ canvas.height = window.innerHeight;
 let character = { x: 300, y: 380, width: 80, height: 70, dy: 0, jumping: false};
 let obstacles = [];
 let obstacles2 = [];
-let shields = [];  // Array to store shield objects
+let shields = [];
 let lifes = [];
 let gameOver = false;
 let gameStarted = false;
@@ -18,11 +18,11 @@ let lifeY = 370;
 let shieldX = canvas.width;
 let shieldY = 370;
 let shieldTime = 0;
-let ob2Interval; // Store the interval for ob2 creation
-const ob2Time = 2000; // Time interval for ob2 creation in milliseconds
+let ob2Interval;
+const ob2Time = 2000; 
 
-const shieldSpawnInterval = 14500;  // 15 seconds in milliseconds
-let shieldInterval;  // To store the interval
+const shieldSpawnInterval = 14500;
+let shieldInterval;
 
 const lifeSpawnInterval = 30000;
 let lifeInterval;
@@ -46,7 +46,7 @@ let djenabled = false;
 let isMovingLeft = false;
 let isMovingRight = false;
 let moveSpeed = 10;
-let lastTime = 0; // TRACKING TIME
+let lastTime = 0;
 let speedBoost = false;
 let speedReduction = false;
 
@@ -89,10 +89,10 @@ let cpdistance = 0;
 function createObstacle() {
     let height = 60;
     let width = 20;
-
+    
     const obstacle = { x: canvas.width, y: 430 - height, width: width, height: height };
     obstacles.push(obstacle);
-
+    
 }
 
 //OBSTACLE 2 CREATION
@@ -100,6 +100,18 @@ function createOb2() {
     let height = 50;
     const ob2  = { x: canvas.width, y: 430 - height, width: 50, height: 50};
     obstacles2.push(ob2);
+}
+
+//CREATE LIFE
+function createLife() {
+    const life = {x: canvas.width, y: life.y, width: 80, height: 80};
+    lifes.push(life);
+}
+
+//CREATE SHIELD
+function createShield() {
+    const shield = { x: canvas.width, y: shieldY, width: 55, height: 80 };
+    shields.push(shield);
 }
 
 // DRAW BACKGROUND
@@ -135,12 +147,6 @@ function drawOb2() {
     }
 }
 
-//CREATE LIFE
-function createLife() {
-    const life = {x: canvas.width, y: life.y, width: 80, height: 80};
-    lifes.push(life);
-}
-
 //DRAW LIFE
 function drawLife() {
     for(let life of lifes) {
@@ -148,11 +154,6 @@ function drawLife() {
     }
 }
 
-//CREATE SHIELD
-function createShield() {
-    const shield = { x: canvas.width, y: shieldY, width: 55, height: 80 };
-    shields.push(shield);  // Push shield into the shields array
-}
 
 //DRAW SHIELD
 function drawShield() {
@@ -196,7 +197,7 @@ function update(deltaTime) {
         shield.x -= obsspeed * (deltaTime / 20);  // Move shield at the same speed as obstacles
     }
     for(let life of lifes) {
-        life.x -= obsspeed * (deltyaTime / 20);
+        life.x -= obsspeed * (deltaTime / 20);
     }
     // REMOVE OFFSCREEN SHIELDS
     shields = shields.filter(shield => shield.x + shield.width > 0);
@@ -226,9 +227,7 @@ function update(deltaTime) {
             lifes = lifes.filter(s => s !== life);  // Remove shield after collision
         }
     }
-    // REMOVE OFFSCREEN OBSTACLES 2
-    obstacles2 = obstacles2.filter(ob2 => ob2.x + ob2.width > 0);
-
+    
     // SPEED CHANGE
     if (isMovingRight && !speedBoost) {
         obsspeed += moveSpeed;
@@ -239,18 +238,18 @@ function update(deltaTime) {
         ob2speed = moveSpeed - ob2speed;
         speedReduction = true;
     }
-
+    
     // MOVING OBSTACLES WITH UNIFORM SPEED
     for (let obstacle of obstacles) {
         obstacle.x -= obsspeed * (deltaTime / 16);
     }
-
+    
     
     // MOVING OBSTACLES WITH UNIFORM SPEED
     for (let ob2 of obstacles2) {
         ob2.x -= ob2speed * (deltaTime / 16);
     }
-
+    
     // BACKGROUND MOVEMENT
     if (isMovingLeft) {
         bgmoveX += moveSpeed * (deltaTime / 16);
@@ -258,7 +257,7 @@ function update(deltaTime) {
     if (isMovingRight) {
         bgmoveX -= moveSpeed * (deltaTime / 16);
     }
-
+    
     // RESET BACKGROUND
     if (bgmoveX >= 0) {
         bgmoveX = 0;
@@ -266,12 +265,12 @@ function update(deltaTime) {
     if (bgmoveX <= -canvas.width) {
         bgmoveX = 0;
     }
-
+    
     // END GAME FOR COLLISION
     if(shieldTime != 0)
-    {
-        shieldTime--;
-    }
+        {
+            shieldTime--;
+        }
     else {
         for (let obstacle of obstacles) {
             if (
@@ -303,12 +302,15 @@ function update(deltaTime) {
                     }
                 }
             }
-    }
-    
-    // REMOVE OFFSCREEN OBSTACLES
-    obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
-    
-    //DISTANCE COUNTING
+        }
+            
+        // REMOVE OFFSCREEN OBSTACLES
+        obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
+            
+        // REMOVE OFFSCREEN OBSTACLES 2
+        obstacles2 = obstacles2.filter(ob2 => ob2.x + ob2.width > 0);
+
+        //DISTANCE COUNTING
     if (!gameOver) {
         
         if (isMovingRight) {
@@ -412,7 +414,7 @@ window.onload = function() {
 
 document.addEventListener('keydown', (event) => {
     if (event.code === 'Space') {
-        jump(); // SPACEBAR PRESS FOR JUMP
+        jump(); // SPACEBAR FOR JUMP
     }
     if (event.code === 'KeyR' && gameOver) {
         resetGame(); // RESET ON R
@@ -475,8 +477,6 @@ function resetGame() {
     djenabled = false;
     moveSpeed = 10;
     obtime = 1500;
-    showLifeOnce = true;
-    showShieldOnce = true;
     obsspeed = 7;
     totalDistance = 0;
     speedBoost = false;
@@ -487,8 +487,6 @@ function resetGame() {
 
 // CHECKPOINT FUNCTION
 function cp(checker) {
-    // clearInterval(obstacleInterval);
-    // clearInterval(ob2Interval);
     character = { x: 300, y: 380, width: 80, height: 70, dy: 0, jumping: false };
     obstacles = [];
     obstacles2 = [];
@@ -498,20 +496,13 @@ function cp(checker) {
     speedReduction = false;
     gameStarted = true;
     lastTime = performance.now();
-    // obstacleInterval = setInterval(createObstacle, obtime);
-    // ob2Interval = setInterval(createOb2, ob2Time);
-
 }
 
 //CHECKPOINT MESSAGE FUNCTION
 function triggerCheckpoint() {
     checkpointMessage = 'CHECKPOINT REACHED!';
-    checkpointTimer = 2000;  // Display message for 2.5 seconds
+    checkpointTimer = 2000;
     if(moveSpeed <16) {moveSpeed += 2;}
     if (obsspeed < 10){obsspeed += 2;}
-    // clearInterval(obstacleInterval);
-    // clearInterval(ob2Interval);
     cpdistance = totalDistance;
-    // ob2Interval = setInterval(createOb2, ob2Time);
-    // obstacleInterval = setInterval(createObstacle, obtime);
 }
