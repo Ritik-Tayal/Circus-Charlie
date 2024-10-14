@@ -20,6 +20,8 @@ let shieldY = 370;
 let shieldTime = 0;
 let ob2Interval;
 const ob2Time = 2000; 
+const gameAudio = new Audio('resources/nightmarish-circus-march-63174.mp3');
+gameAudio.loop = true;
 
 const shieldSpawnInterval = 14500;
 let shieldInterval;
@@ -346,6 +348,8 @@ function gameLoop(timestamp) {
     drawBackground();
 
     if (gameOver) {
+        gameAudio.pause();
+        gameAudio.currentTime = 0;
         ctx.fillStyle = 'black';
         ctx.font = '30px myFont';
        
@@ -447,6 +451,8 @@ document.addEventListener('keyup', (event) => {
 // START GAME
 function startGame() {
     gameStarted = true;
+    gameStarted = true;
+    gameAudio.play();
     lastTime = performance.now();
     gameLoop(lastTime);
     obstacleInterval = setInterval(createObstacle, obtime);
