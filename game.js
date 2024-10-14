@@ -60,6 +60,21 @@ let stagnant = 10;
 let runId = null; 
 let runLeftId = null;
 
+
+let player_image2 = new Image();
+player_image2.src = "sprites_pomni_by_isaacx1977_dgepo85.png";
+let mario_x = 55;
+let mario_y = 31;
+let mario_i = 0;
+let mario_gf = 0;
+// let stagnant = 5;
+let marioRgId = null; 
+let marioLgId = null;
+
+
+
+
+
 // ctx.drawImage(lion_image, 163 , 0, 20, 30, 55, 50, 100, 100);
 
 
@@ -123,6 +138,62 @@ function drawBackground() {
     ctx.drawImage(backgroundImage, bgmoveX + canvas.width, 0, canvas.width, canvas.height);
 }
 
+
+function marioRightWalk() {
+    ctx.clearRect(character.x, character.y, character.width+40, character.height+20);
+    ctx.drawImage(backgroundImage, 100,300, 10,10,character.x , character.y - 20, character.width + 40, character.height + 40);
+    ctx.drawImage(player_image2,25 + mario_i * mario_x, 70, 45, 80,character.x,character.y,character.width+40,character.height+40 );
+    
+    if (mario_gf % stagnant === 0) {
+        if(mario_i==0){
+            mario_i=3;
+        }
+        else if(mario_i==3){
+            mario_i=4;
+        }
+        else{
+            mario_i=0;
+        }
+    }
+    mario_gf++;
+    marioRgId = requestAnimationFrame(marioRightWalk);  
+}
+
+// marioRightWalk();
+
+function marioLeftWalk() {
+    ctx.clearRect(character.x, character.y, character.width+40, character.height+20);
+    ctx.drawImage(backgroundImage, 100,300, 10,10,character.x , character.y - 20, character.width + 40, character.height + 40);
+    ctx.drawImage(player_image2,300 - mario_i * mario_x, 70, 45, 80,character.x,character.y,character.width+40,character.height+40 );
+    
+    if (mario_gf % stagnant === 0) {
+        if(mario_i==0){
+            mario_i=3;
+        }
+        else if(mario_i==3){
+            mario_i=4;
+        }
+        else{
+            mario_i=0;
+        }
+    }
+    mario_gf++;
+    marioLgId = requestAnimationFrame(marioLeftWalk);  
+}
+
+function marioRightStop() {
+    ctx.clearRect(character.x, character.y, character.width+40, character.height+20);
+    ctx.drawImage(backgroundImage, 100,300, 10,10,character.x , character.y - 20, character.width + 40, character.height + 40);
+    ctx.drawImage(player_image2,25 + 0 * mario_x, 70, 45, 80,character.x,character.y,character.width+40,character.height+40 );
+    // ctx.clearRect(character.x, character.y, character.width, character.height);
+    // drawBackground();
+    // drawObstacles();
+    
+    requestAnimationFrame(marioRightStop);  
+}
+
+// marioRightWalk();
+
 // DRAW PLAYER
 function drawCharacter() {
     ctx.clearRect(character.x, character.y, character.width+40, character.height);
@@ -133,7 +204,7 @@ function drawCharacter() {
     // drawLife();
     // drawShield();
     // drawLife();
-    ctx.drawImage(playerImage,163,0,20,30, character.x+15, character.y-35, character.width-30, character.height-20);
+    ctx.drawImage(playerImage,163,0,20,30, character.x+15, character.y-25, character.width-30, character.height-30);
     ctx.drawImage(playerImage,160+lioni*38,84,36,20,character.x, character.y, character.width+20, character.height);
     if (gf % stagnant === 0) {
         lioni = (lioni < 2) ? lioni + 1 : 0;
@@ -148,7 +219,7 @@ function drawCharacterStop() {
     // ctx.clearRect(character.x, character.y, character.width, character.height);
     // drawBackground();
     // drawObstacles();
-    ctx.drawImage(playerImage,163,0,20,30, character.x+15, character.y-35, character.width-30, character.height-20);
+    ctx.drawImage(playerImage,163,0,20,30, character.x+15, character.y-25, character.width-30, character.height-30);
     ctx.drawImage(playerImage,160+2*38,84,36,20,character.x, character.y, character.width+20, character.height);
     requestAnimationFrame(drawCharacterStop);  
 }
@@ -159,7 +230,7 @@ function drawCharacterLeft() {
     // ctx.clearRect(character.x, character.y, character.width, character.height);
     // drawBackground();
     // drawObstacles();
-    ctx.drawImage(playerImage,135,0,20,30, character.x+15, character.y-35, character.width-30, character.height-20);
+    ctx.drawImage(playerImage,135,0,20,30, character.x+15, character.y-25, character.width-30, character.height-30);
     ctx.drawImage(playerImage,119-lioni*35,84,36,20,character.x, character.y, character.width+20, character.height);
     if (gf % stagnant === 0) {
         lioni = (lioni < 2) ? lioni + 1 : 0;
@@ -174,7 +245,7 @@ function drawCharacterStop2() {
     // ctx.clearRect(character.x, character.y, character.width, character.height);
     // drawBackground();
     // drawObstacles();
-    ctx.drawImage(playerImage,135,0,20,30, character.x+15, character.y-35, character.width-30, character.height-20);
+    ctx.drawImage(playerImage,135,0,20,30, character.x+15, character.y-25, character.width-30, character.height-30);
     ctx.drawImage(playerImage,119-2*35,84,36,20,character.x, character.y, character.width+20, character.height);
 
     requestAnimationFrame(drawCharacterStop2);  
@@ -485,19 +556,33 @@ document.addEventListener('keydown', (event) => {
     }
     if (event.code === 'ArrowLeft') {
         isMovingLeft = true;
-        if (runLeftId !== null) {
-            cancelAnimationFrame(runLeftId);  
-
+        if(totalDistance<1000){
+            if (runLeftId !== null) {
+                cancelAnimationFrame(runLeftId);  
+            }
+            drawCharacterLeft();
         }
-        drawCharacterLeft();
+        else{
+            if(marioLgId!==null){
+                cancelAnimationFrame(marioLgId)
+            }
+            marioLeftWalk();
+        }
     }
     if (event.code === 'ArrowRight') {
         isMovingRight = true;
-        if (runId !== null) {
-            cancelAnimationFrame(runId);
-
+        if(totalDistance<10000){
+            if (runId !== null) {
+                cancelAnimationFrame(runId);  
+            }
+            drawCharacter();
         }
-        drawCharacter();
+        else{
+            if(marioRgId!==null){
+                cancelAnimationFrame(marioRgId)
+            }
+            marioRightWalk();
+        }
     }
 });
 
@@ -508,18 +593,33 @@ document.addEventListener('keyup', (event) => {
         speedReduction = false;
         obsspeed = 7;
         ob2speed = 5;
-        cancelAnimationFrame(drawCharacterLeft);
-        runLeftId=null;
-        drawCharacterStop2();
+        if(totalDistance<10000){
+            cancelAnimationFrame(drawCharacterLeft);
+            runLeftId=null;
+            drawCharacterStop2();
+        }
+        else{
+            cancelAnimationFrame(marioLeftWalk);
+            marioLgId=null;
+            marioRightStop();
+        }
+        
     }
     if (event.code === 'ArrowRight') {
         isMovingRight = false;
         speedBoost = false;
         obsspeed = 7;
         ob2speed = 5;
-        cancelAnimationFrame(drawCharacter);
-        runId=null;
-        drawCharacterStop();
+        if(totalDistance<10000){
+            cancelAnimationFrame(drawCharacter);
+            runId=null;
+            drawCharacterStop();
+        }
+        else{
+            cancelAnimationFrame(marioRightWalk);
+            marioRgId=null;
+            marioRightStop();
+        }
     }
 });
 

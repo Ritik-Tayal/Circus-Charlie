@@ -4,11 +4,11 @@ let canvas_width = canvas.width = 1000;
 let canvas_height = canvas.height = 500;
 
 let player_image2 = new Image();
-player_image2.src = "mario2.png";
-let x = 40;
-let y = 31;
-let i = 0;
-let gf = 0;
+player_image2.src = "sprites_pomni_by_isaacx1977_dgepo85.png";
+let mario_x = 55;
+let mario_y = 31;
+let mario_i = 0;
+let mario_gf = 0;
 let stagnant = 5;
 let marioRgId = null; 
 let marioLgId = null;
@@ -17,39 +17,32 @@ let marioLgId = null;
 
 function marioRightWalk() {
     c.clearRect(0, 0, canvas_width, canvas_height);
-    c.drawImage(player_image2,198 + i * x, 2, 25, 30, 50, 50, 80, 80);
-    if (gf % stagnant === 0) {
-        if(i==0){
-            i=3;
-        }
-        else if(i==3){
-            i=4;
+    c.drawImage(player_image2,25 + mario_i * mario_x, 70, 45, 80, 50, 50, 100, 100);
+    if (mario_gf % stagnant === 0) {
+        if(mario_i<5){
+           mario_i++;
         }
         else{
-            i=0;
+            mario_i=0;
         }
     }
-    gf++;
+    mario_gf++;
     marioRgId = requestAnimationFrame(marioRightWalk);  
 }
 
-// marioRightWalk();
 
 function marioLeftWalk() {
     c.clearRect(0, 0, canvas_width, canvas_height);
-    c.drawImage(player_image2, 158 - i * x, 2, 25, 30, 50, 50, 80, 80);
-    if (gf % stagnant === 0) {
-        if(i==0){
-            i=3;
-        }
-        else if(i==3){
-            i=4;
+    c.drawImage(player_image2, 300 - mario_i * mario_x, 70, 45, 80, 50, 50, 100, 100);
+    if (mario_gf % stagnant === 0) {
+        if(mario_i<5){
+            mario_i++;
         }
         else{
-            i=0;
+            mario_i=0;
         }
     }
-    gf++;
+    mario_gf++;
     marioLgId = requestAnimationFrame(marioLeftWalk);  
 }
 
@@ -57,13 +50,13 @@ function marioLeftWalk() {
 
 function marioRightStop() {
     c.clearRect(0, 0, canvas_width, canvas_height);
-    c.drawImage(player_image2, 198 + 0 * x, 2, 25, 30, 50, 50, 80, 80);
+    c.drawImage(player_image2, 25, 70, 45, 80, 50, 50, 100, 100);
     requestAnimationFrame(marioRightStop); 
 }
 
 function marioLeftStop() {
     c.clearRect(0, 0, canvas_width, canvas_height);
-    c.drawImage(player_image2, 158 + 0 * x, 2, 25, 30, 50, 50, 80, 80);
+    c.drawImage(player_image2, 25,70,45,80,50,50,100,100);
     requestAnimationFrame(marioLeftStop); 
 }
 
