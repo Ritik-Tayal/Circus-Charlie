@@ -184,17 +184,15 @@ function update(deltaTime) {
         }
     }
     
-    // Update time since last checkpoint
     timeSinceLastCheckpoint += deltaTime;
 
-    // Trigger checkpoint if 30 seconds have passed
     if (timeSinceLastCheckpoint >= checkpointInterval) {
         triggerCheckpoint();
         timeSinceLastCheckpoint = 0;  // Reset timer after checkpoint
     }
 
     for (let shield of shields) {
-        shield.x -= obsspeed * (deltaTime / 20);  // Move shield at the same speed as obstacles
+        shield.x -= obsspeed * (deltaTime / 20);
     }
     for(let life of lifes) {
         life.x -= obsspeed * (deltaTime / 20);
@@ -211,8 +209,8 @@ function update(deltaTime) {
             character.y < shield.y + shield.height &&
             character.y + character.height > shield.y
         ) {
-            shieldTime = 400;  // Activate shield for 400 frames
-            shields = shields.filter(s => s !== shield);  // Remove shield after collision
+            shieldTime = 400;
+            shields = shields.filter(s => s !== shield);
         }
     }
 
@@ -224,7 +222,7 @@ function update(deltaTime) {
             character.y + character.height > life.y
         ) {
            lives++;
-            lifes = lifes.filter(s => s !== life);  // Remove shield after collision
+            lifes = lifes.filter(s => s !== life); 
         }
     }
     
