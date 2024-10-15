@@ -5,55 +5,53 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 let character = { x: 300, y: 380, width: 80, height: 70, dy: 0, jumping: false};
+let moveSpeed = 9;
+
 let obstacles = [];
-let obstacles2 = [];
+let obstacleInterval;
+let obsspeed = 7;
+let obtime = 1500;
 let leftwings = [];
 let leftwingInterval;
 let rightwings = [];
 let rightwingInterval;
 let tops = [];
 let topsInterval;
-let shields = [];
-let lifes = [];
-let gameOver = false;
-let gameStarted = false;
-let obstacleInterval;
-let bgmoveX = 0;
-let lifeX = canvas.width;
-let lifeY = 370;
-let shieldX = canvas.width;
-let shieldY = 370;
-let shieldTime = 0;
+
+let obstacles2 = [];
 let ob2Interval;
 const ob2Time = 2000; 
+let ob2speed = 6;
+
 const gameAudio = new Audio('resources/nightmarish-circus-march-63174.mp3');
 gameAudio.loop = true;
 
-const shieldSpawnInterval = 14500;
+let shields = [];
+let shieldTime = 0;
+const shieldSpawnInterval = 13500;
 let shieldInterval;
+let shieldX = canvas.width;
+let shieldY = 370;
 
-const lifeSpawnInterval = 30000;
+let lifes = [];
+const lifeSpawnInterval = 25000;
 let lifeInterval;
+let lifeX = canvas.width;
+let lifeY = 370;
 
+let gameOver = false;
+let gameStarted = false;
+let bgmoveX = 0;
 const gravity = 1;
 const jumpPower = -17;
-let obsspeed = 7;
-let ob2speed = 6;
 let totalDistance = 0;
 let lives = 1;
 let startpoint = 0;
-let checkpoint1 = 5000;
-let checkpoint2 = 15000;
-let obtime = 1500;
-let showSpecialImage = false;
-let specialImageX = canvas.width;
-let specialImageY = 290;
 let doublejump = false;
 let djenabled = false;
 
 let isMovingLeft = false;
 let isMovingRight = false;
-let moveSpeed = 9;
 let lastTime = 0;
 let speedBoost = false;
 let speedReduction = false;
@@ -80,7 +78,7 @@ rightImage.src = 'resources/righthoop1.png';
 
 // OBSTACLE 1
 const obstacleImage = new Image();
-obstacleImage.src = 'resources/fh1.png';
+obstacleImage.src = 'resources/firehoopbottom.png';
 
 //TOP OBSTACLE
 const topImage = new Image();
@@ -88,7 +86,7 @@ topImage.src = 'resources/hooptop.png';
 
 //OBSTACLE 2
 const ob2Image = new Image();
-ob2Image.src = 'resources/download.png';
+ob2Image.src = 'resources/wbox.png';
 
 //EXTRA LIFE
 const lifeImage = new Image();
@@ -116,7 +114,7 @@ function createObstacle() {
     let height = 60;
     let width = 50;
     
-    const obstacle = { x: canvas.width, y: 400, width: width, height: height };
+    const obstacle = { x: canvas.width, y: 390, width: width, height: height };
     obstacles.push(obstacle);
     
 }
@@ -136,13 +134,13 @@ function createTop() {
 //OBSTACLE 2 CREATION
 function createOb2() {
     let height = 50;
-    const ob2  = { x: canvas.width, y: 430 - height, width: 50, height: 50};
+    const ob2  = { x: canvas.width, y: 430 - height, width: 70, height: 70};
     obstacles2.push(ob2);
 }
 
 //CREATE LIFE
 function createLife() {
-    const life = {x: canvas.width, y: life.y, width: 80, height: 80};
+    const life = {x: canvas.width, y: lifeY, width: 80, height: 80};
     lifes.push(life);
 }
 
@@ -529,7 +527,6 @@ document.addEventListener('keyup', (event) => {
 
 // START GAME
 function startGame() {
-    gameStarted = true;
     gameStarted = true;
     gameAudio.play();
     lastTime = performance.now();
