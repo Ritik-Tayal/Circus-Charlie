@@ -28,15 +28,13 @@ gameAudio.loop = true;
 
 let shields = [];
 let shieldTime = 0;
-const shieldSpawnInterval = 13500;
+const shieldSpawnInterval = 10500;
 let shieldInterval;
-let shieldX = canvas.width;
 let shieldY = 370;
 
 let lifes = [];
-const lifeSpawnInterval = 25000;
+const lifeSpawnInterval = 18500;
 let lifeInterval;
-let lifeX = canvas.width;
 let lifeY = 370;
 
 let gameOver = false;
@@ -45,7 +43,7 @@ let bgmoveX = 0;
 const gravity = 1;
 const jumpPower = -17;
 let totalDistance = 0;
-let lives = 1;
+let lives = 2;
 let startpoint = 0;
 let doublejump = false;
 let djenabled = false;
@@ -55,6 +53,17 @@ let isMovingRight = false;
 let lastTime = 0;
 let speedBoost = false;
 let speedReduction = false;
+
+// CHECKPOINT MESSAGE
+let checkpointMessage = '';
+let checkpointTimer = 0;
+let timeSinceLastCheckpoint = 0;
+const checkpointInterval = 20000;
+let cpdistance = 0;
+
+let doubleJumpMessage = '';
+let doubleJumpTimer = 0;
+let messageOnce = false;
 
 // HOMESCREEN
 const initialImage = new Image();
@@ -95,13 +104,6 @@ lifeImage.src = 'resources/xtralife.png';
 //SHIELD
 const shieldImage = new Image();
 shieldImage.src = 'resources/shieldeffect.png';
-
-// CHECKPOINT MESSAGE
-let checkpointMessage = '';
-let checkpointTimer = 0;
-let timeSinceLastCheckpoint = 0;
-const checkpointInterval = 25000;
-let cpdistance = 0;
 
 //LEFT WING CREATION
 function createLeftwing() {
@@ -188,6 +190,7 @@ function drawTop() {
         ctx.drawImage(topImage, topob.x, topob.y, topob.width, topob.height);
     }
 }
+
 //DRAW SHIELD
 function drawShields() {
     for (let shield of shields) {
@@ -281,9 +284,10 @@ function update(deltaTime) {
         ob2speed += moveSpeed;
         speedBoost = true;
     } else if (isMovingLeft && !speedReduction) {
-        obsspeed = moveSpeed - obsspeed;
-        ob2speed = moveSpeed - ob2speed;
-        speedReduction = true;
+
+            obsspeed = 3;
+            ob2speed = 2;
+            speedReduction = true;
     }
     
     // MOVING OBSTACLES WITH UNIFORM SPEED
@@ -389,16 +393,11 @@ function update(deltaTime) {
         
         if (isMovingRight) {
             totalDistance += moveSpeed;
-            if(totalDistance > 5000)
-                {
-                    if(!djenabled)
-                    {
-                    djenabled = true;
-                    ctx.fillStyle = 'black';
-                    ctx.font = '30px myFont';
-                    ctx.fillText('DOUBLE JUMP ENABLED', canvas.width/2 - 200, 200);
-                    }
-                }
+            if(totalDistance > 5000 && !djenabled)
+            {
+                djenabled = true;
+                doubleJumpMessage = 'DOUBLE JUMP ACTIVE';
+                doubleJumpTimer = 2000;
             }
             if (isMovingLeft) {
                 if(totalDistance >= 5){
@@ -411,7 +410,7 @@ function update(deltaTime) {
         
     }
 }
-
+}
 
 // GAME LOOP
 function gameLoop(timestamp) {
@@ -453,6 +452,16 @@ function gameLoop(timestamp) {
         ctx.fillStyle = 'black';
         ctx.font = '30px myFont';
         ctx.fillText('Immunity: ' + shieldTime, 40, 600);
+    }
+
+    //DOUBLE JUMP MESSAGE
+    if (doubleJumpMessage && doubleJumpTimer > 0 && !messageOnce) {
+        ctx.fillStyle = 'black';
+        ctx.font = '40px myFont';
+        ctx.fillText(doubleJumpMessage, canvas.width / 2 - 420, canvas.height / 2);
+        doubleJumpTimer -= deltaTime;
+    } else {
+        doubleJumpMessage = '';
     }
     // DISPLAY 'CHECKPOINT'
     if (checkpointMessage && checkpointTimer > 0) {
@@ -502,7 +511,7 @@ document.addEventListener('keydown', (event) => {
         startGame(); // PLAY ON P
     }
     if (event.code === 'ArrowLeft') {
-        isMovingLeft = true;
+            isMovingLeft = true;
     }
     if (event.code === 'ArrowRight') {
         isMovingRight = true;
@@ -558,13 +567,14 @@ function resetGame() {
     obstacles2 = [];
     shields = [];
     lifes = [];
-    lives = 1;
+    lives = 2;
     gameOver = false;
     checkpointTimer = 0;
     timeSinceLastCheckpoint = 0;
     bgmoveX = 0;
     djenabled = false;
     moveSpeed = 10;
+    cpdistance = 0;
     obtime = 1500;
     obsspeed = 7;
     totalDistance = 0;
@@ -578,13 +588,40 @@ function resetGame() {
 function cp(checker) {
     character = { x: 300, y: 380, width: 80, height: 70, dy: 0, jumping: false };
     obstacles = [];
+    leftwings = [];
+    rightwings = [];
+    tops =[];
     obstacles2 = [];
+    shields = [];
+    lifes = [];
     bgmoveX = 0;
     speedBoost = false;
     totalDistance = checker;
+    timeSinceLastCheckpoint = 0;
     speedReduction = false;
     gameStarted = true;
     lastTime = performance.now();
+    clearInterval(leftwingInterval);
+    clearInterval(obstacleInterval);
+    clearInterval(topsInterval);
+    clearInterval(rightwingInterval);
+    clearInterval(ob2Interval);
+    clearInterval(shieldInterval);
+    clearInterval(lifeInterval);
+    checkpointMessage = 'RESPAWN AT CHECKPOINT!';
+    checkpointTimer = 2000;
+    setTimeout(() => {
+        checkpointMessage = '';
+        lastTime = performance.now();
+    
+        obstacleInterval = setInterval(createObstacle, obtime);
+        topsInterval = setInterval(createTop, obtime);
+        leftwingInterval = setInterval(createLeftwing, obtime);
+        ob2Interval = setInterval(createOb2, ob2Time);
+        rightwingInterval = setInterval(createRightwing, obtime);
+        shieldInterval = setInterval(createShield, shieldSpawnInterval);
+        lifeInterval = setInterval(createLife, lifeSpawnInterval);
+    }, 2000);
 }
 
 //CHECKPOINT MESSAGE FUNCTION
@@ -592,6 +629,5 @@ function triggerCheckpoint() {
     checkpointMessage = 'CHECKPOINT REACHED!';
     checkpointTimer = 2000;
     if(moveSpeed <16) {moveSpeed += 2;}
-    if (obsspeed < 10){obsspeed += 2;}
     cpdistance = totalDistance;
 }
