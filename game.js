@@ -25,6 +25,9 @@ let ob2speed = 6;
 
 const gameAudio = new Audio('resources/nightmarish-circus-march-63174.mp3');
 gameAudio.loop = true;
+const gameOverAudio = new Audio('resources/game-end.mp3');
+gameOverAudio.loop = false;
+
 
 let shields = [];
 let shieldTime = 0;
@@ -423,6 +426,9 @@ function gameLoop(timestamp) {
     if (gameOver) {
         gameAudio.pause();
         gameAudio.currentTime = 0;
+        if (!gameOverAudio.playing) { 
+            gameOverAudio.play();
+        }
         ctx.fillStyle = 'black';
         ctx.font = '30px myFont';
        
@@ -581,6 +587,8 @@ function resetGame() {
     speedBoost = false;
     speedReduction = false;
     lastTime = 0;
+    gameOverAudio.pause();
+    gameOverAudio.currentTime = 0;
     startGame();
 }
 
